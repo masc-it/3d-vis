@@ -280,6 +280,17 @@ export function init() {
     }, onerror = function (e) {
         console.log(e)
     } ); */
+    const wallGeo = new BoxGeometry(1, 1, 1);
+    const wall1 = new Mesh(
+        wallGeo,
+        new MeshLambertMaterial({ color: 0x000000 })
+    );
+
+    wall1.position.set(minX - 1200, meanY , meanZ - 100)
+
+    wall1.scale.x *= 2000
+    wall1.scale.y *= 2000
+    scene.add(wall1)
 
     const fontt = new FontLoader().parse(typefaceFont)
 
@@ -529,15 +540,19 @@ function render() {
         
     
         if (intersects.length > 0) {
+            
             if (INTERSECTED != intersects[0].object) {
                 if (INTERSECTED)
                     INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
-
-                INTERSECTED = intersects[0].object;
-                INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
-                INTERSECTED.material.emissive.setHex(0xff0000);
+                if (intersects[0].object.name.startsWith("#cube")){
+                    INTERSECTED = intersects[0].object;
+                    INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
+                    INTERSECTED.material.emissive.setHex(0xff0000);
+                }
+                
             }
         } else {
+
             if (INTERSECTED) {
                 INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
             }
