@@ -259,7 +259,7 @@ export function init() {
 	document.addEventListener("mousemove", onPointerMove);
     document.addEventListener("mousedown", onMouseDown);
     document.addEventListener("mouseup", onMouseUp);
-
+    document.addEventListener("click", onMouseClick);
 
 	window.addEventListener("resize", onWindowResize);
 
@@ -281,9 +281,34 @@ export function init() {
 }
 
 let isMouseDown = false
+let mouseClick = false
 function onMouseDown() {
 	isMouseDown = true
 }
+function onMouseClick(event: any) {
+
+    
+    if (mouseClick){
+        
+        if (!event.target.classList.contains("preview")){
+            mouseClick = false
+            wasOpen = false
+            INTERSECTED = undefined
+            let d = document.getElementById("lol");
+            if (d != undefined) {
+                d.remove()
+            }
+        }
+        
+    }
+	pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+	pointer.y = -((event.clientY - 0) / window.innerHeight) * 2 + 1; // -40px due to navbar
+
+    if (INTERSECTED != undefined && INTERSECTED.name.startsWith("#cube") ) {
+        mouseClick = true
+    }
+}
+
 function onMouseUp() {
 	isMouseDown = false
 }
@@ -295,6 +320,7 @@ function onWindowResize() {
 }
 
 function buildPopup(obj: Mesh, top: any, left: any) {
+
 	if (wasOpen && previousObj != undefined && obj.name == previousObj) {
 		let d = document.getElementById("lol");
 		if (d != undefined) {
@@ -304,11 +330,12 @@ function buildPopup(obj: Mesh, top: any, left: any) {
 
         return;
 	} else {
-
+        
         try {
-			let d = document.getElementById("lol");
-			if (d) d.remove();
-		} catch (error) {}
+            let d = document.getElementById("lol");
+            if (d) d.remove();
+        } catch (error) {}
+        
 	}
 
     //window.shell.showItemInFolder(conf["dataset_path"] + obj.userData["img_name"])
@@ -317,19 +344,40 @@ function buildPopup(obj: Mesh, top: any, left: any) {
 			conf["dataset_path"] + obj.userData["img_name"],
 			{ encoding: "base64" }
 		);
-		//console.log(b64)
+		console.log("first time")
 		imgs[obj.name] = b64;
 	}
 
 	var div = document.createElement("div");
 	div.style.width = "400px";
-	div.style.height = "400px";
-	div.style.background = "red";
+	div.style.height = "430px";
+	div.style.background = "white";
 	div.style.color = "white";
-	div.innerHTML = `<img width='400px' height='400px' src='data:image/jpg;base64,${
+
+    let img = document.createElement("img")
+    img.src = `data:image/jpg;base64,${imgs[obj.name]}`
+    img.width = 400
+    img.height = 400
+    img.classList.add("preview")
+    div.appendChild(img)
+
+    let openBtn = document.createElement("button")
+    openBtn.textContent = "open"
+    openBtn.type = "button"
+    openBtn.classList.add("preview")
+    openBtn.onclick = function (e:any) {
+        e.preventDefault()
+        window.shell.showItemInFolder(conf["dataset_path"] + obj.userData["img_name"])
+        return false
+    }
+    div.appendChild(openBtn)
+
+
+	/* div.innerHTML = `<img class='preview' width='400px' height='400px' src='data:image/jpg;base64,${
 		imgs[obj.name]
-	}'/>`;
+	}'/>`; */
 	div.id = "lol";
+    div.classList.add("preview")
 	div.style.position = "absolute";
 	div.style.left = left + 20 + "px";
 	div.style.top = top + "px";
@@ -340,7 +388,7 @@ function buildPopup(obj: Mesh, top: any, left: any) {
 
 function onPointerMove(event: any) {
 
-    if (isMouseDown) return
+    if (isMouseDown || mouseClick) return
 	pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
 	pointer.y = -((event.clientY - 0) / window.innerHeight) * 2 + 1; // -40px due to navbar
 
@@ -350,7 +398,7 @@ function onPointerMove(event: any) {
         previousObj = INTERSECTED.name;
         
 	} else {
-		if (wasOpen) {
+		if (wasOpen && !mouseClick) {
 			try {
 				let l = document.getElementById("lol");
 				if (l) l.remove();
