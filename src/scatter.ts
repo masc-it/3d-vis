@@ -13,24 +13,35 @@ let rawdata = window.fs.readFileSync(
 let data = JSON.parse(rawdata);
 
 let dataObj = data["data"]
+/* 
+import hFont from "./Musa_Regular.json"
+import typefaceFont from 'three/examples/fonts/helvetiker_regular.typeface.json' */
+import typefaceFont from 'three/examples/fonts/helvetiker_regular.typeface.json'
 
 
 import { GUI } from "dat.gui";
 import {
     AmbientLight,
+	BoxBufferGeometry,
+	BoxGeometry,
 	Camera,
 	Color,
+	Group,
 	Mesh,
+	MeshBasicMaterial,
 	MeshLambertMaterial,
+	MeshPhongMaterial,
 	PerspectiveCamera,
 	Raycaster,
 	Renderer,
 	Scene,
 	SphereBufferGeometry,
 	Vector2,
-	WebGLRenderer,
+	WebGLRenderer
 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
+import {TextGeometry} from "three/examples/jsm/geometries/TextGeometry.js"
 
 let container, stats;
 let camera: PerspectiveCamera;
@@ -164,11 +175,14 @@ export function init() {
 
 	const light = new AmbientLight(0xffffff, 1);
 	scene.add(light);
+
+    let hist : {[k:number]: number} = {}
+
     for (let index = 0; index < data["labels"].length; index++) {
         const element = data["labels"][index];
         
         camera.layers.enable(element+2)
-    
+        hist[element] = 0
     }
 	const geometry = new SphereBufferGeometry(4, 8, 8);
 	/* const terrainObj = new THREE.Mesh(
@@ -195,14 +209,24 @@ export function init() {
 	let meanY = 0;
 	let meanZ = 0;
 	let num = 0;
+    
+    let minX = 100000
+
 	for (let i = 0; i < dataObj.length; i++) {
 		let point = dataObj[i];
 		const object = new Mesh(
 			geometry,
 			new MeshLambertMaterial({ color: ( point["label"] != -1 ? colors[point["label"]] : 0xcacaca )})
 		);
+        
+        hist[point["label"]] += 1
+        
+        let wX = point["x"] * 200
+        if ( wX < minX ){
+            minX = wX
+        }
 
-		object.position.x = point["x"] * 200; // Math.random() * 400
+		object.position.x = wX // Math.random() * 400
 		object.position.y = point["y"] * 200;
 		object.position.z = point["z"] * 200;
 		if (point["label"] == -1) {
@@ -227,6 +251,7 @@ export function init() {
 		scene.add(object);
 	}
 
+
 	meanX /= num;
 	meanY /= num;
 	meanZ /= num;
@@ -235,7 +260,69 @@ export function init() {
 	camera.position.y = meanY * 1.5;
 	camera.position.z = meanZ * 1.5;
 
+
+    /* loader.load( "http://myfilehosting.altervista.org/api/Roboto_Medium_Regular.json", function ( font ) {
+
+        const tGeo = new TextGeometry( 'Hello three.js!', {
+            font: font,
+            size: 80,
+            height: 5
+        } );
+        const tMesh = new Mesh(tGeo,
+            [
+                new MeshPhongMaterial({color: 0xffffff}),
+                new MeshPhongMaterial({color: 0xffffff})
+            ])
+        
+        tMesh.position.set(minX, meanY, meanZ)
+        scene.add(tMesh)
+
+    }, onerror = function (e) {
+        console.log(e)
+    } ); */
+
+    const fontt = new FontLoader().parse(typefaceFont)
+
+    for (let index = 0; index < data["labels"].length; index++) {
+        const element = data["labels"][index];
+        
+        const h = hist[element] * 0.5
+        const histGeometry = new BoxGeometry(30, 1, 30);
+        const object = new Mesh(
+			histGeometry,
+			new MeshLambertMaterial({ color: ( element != -1 ? colors[element] : 0xcacaca )})
+		);
+        
+        object.position.set(minX - 1000 + 50 * index, meanY , meanZ )
+        object.rotation.y = 0.2
+        
+        /* object.position.x = meanX + 4 * index;
+        object.position.y = 100
+        object.position.z = meanZ  */
+
+        object.scale.y *= h
+        object.translateY(h/2)
+
+        const tGeo = new TextGeometry( hist[element].toString() , {
+            font: fontt,
+            size: 10,
+            height: 5
+        } );
+
+        const tMat = new MeshLambertMaterial({color: 0xffffff})
+        var tMesh = new Mesh( tGeo, tMat )
     
+        tMesh.position.set(minX - 1015 + 50 * index, meanY , meanZ )
+        tMesh.rotation.y = 0.2
+        tMesh.translateY(h)
+        scene.add(tMesh)
+
+        scene.add(object)
+    }
+
+    
+    
+
 	raycaster = new Raycaster();
     raycaster.layers.enableAll()
 	renderer = new WebGLRenderer({ antialias: true });
@@ -262,6 +349,8 @@ export function init() {
     document.addEventListener("click", onMouseClick);
 
 	window.addEventListener("resize", onWindowResize);
+
+
 
     /* const gui = new GUI()
 
@@ -435,22 +524,28 @@ function render() {
 
 	const intersects = raycaster.intersectObjects(scene.children, false);
 
-	if (intersects.length > 0) {
-		if (INTERSECTED != intersects[0].object) {
-			if (INTERSECTED)
-				INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
+    try {
+        
+        
+    
+        if (intersects.length > 0) {
+            if (INTERSECTED != intersects[0].object) {
+                if (INTERSECTED)
+                    INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
 
-			INTERSECTED = intersects[0].object;
-			INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
-			INTERSECTED.material.emissive.setHex(0xff0000);
-		}
-	} else {
-		if (INTERSECTED) {
-			INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
-		}
+                INTERSECTED = intersects[0].object;
+                INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
+                INTERSECTED.material.emissive.setHex(0xff0000);
+            }
+        } else {
+            if (INTERSECTED) {
+                INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
+            }
 
-		INTERSECTED = undefined;
-	}
-
+            INTERSECTED = undefined;
+        }
+    } catch (error) {
+            
+    }
 	renderer.render(scene, camera);
 }
