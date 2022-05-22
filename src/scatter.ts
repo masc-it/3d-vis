@@ -37,6 +37,7 @@ import {
 	Scene,
 	SphereBufferGeometry,
 	Vector2,
+	Vector3,
 	WebGLRenderer
 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
@@ -256,30 +257,8 @@ export function init() {
 	meanY /= num;
 	meanZ /= num;
 
-	camera.position.x = meanX * 1.5;
-	camera.position.y = meanY * 1.5;
-	camera.position.z = meanZ * 1.5;
+    
 
-
-    /* loader.load( "http://myfilehosting.altervista.org/api/Roboto_Medium_Regular.json", function ( font ) {
-
-        const tGeo = new TextGeometry( 'Hello three.js!', {
-            font: font,
-            size: 80,
-            height: 5
-        } );
-        const tMesh = new Mesh(tGeo,
-            [
-                new MeshPhongMaterial({color: 0xffffff}),
-                new MeshPhongMaterial({color: 0xffffff})
-            ])
-        
-        tMesh.position.set(minX, meanY, meanZ)
-        scene.add(tMesh)
-
-    }, onerror = function (e) {
-        console.log(e)
-    } ); */
     const wallGeo = new BoxGeometry(1, 1, 1);
     const wall1 = new Mesh(
         wallGeo,
@@ -291,6 +270,12 @@ export function init() {
     wall1.scale.x *= 2000
     wall1.scale.y *= 2000
     scene.add(wall1)
+    
+    
+
+    /* camera.position.setX(wall1.position.x) //= wall1.position
+    camera.position.setY(wall1.position.y)
+    camera.position.setZ(wall1.position.z - 100) */
 
     const fontt = new FontLoader().parse(typefaceFont)
 
@@ -326,13 +311,13 @@ export function init() {
         tMesh.position.set(minX - 1015 + 50 * index, meanY , meanZ )
         tMesh.rotation.y = 0.2
         tMesh.translateY(h)
-        scene.add(tMesh)
+
+        object.layers.set(element + 2)
+        tMesh.layers.set(element + 2)
 
         scene.add(object)
+        scene.add(tMesh)
     }
-
-    
-    
 
 	raycaster = new Raycaster();
     raycaster.layers.enableAll()
@@ -341,19 +326,40 @@ export function init() {
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	container.appendChild(renderer.domElement);
 
-	controls = new OrbitControls(camera, renderer.domElement);
-	controls.target.set(0, 0.5, 0);
+    camera.position.x = meanX * 0.0;
+	camera.position.y = meanY * 1.3;
+	camera.position.z = meanZ * 2.4;
+/* 
+    camera.rotation.x = -0.03836148783319388 // -100 *0.0174533
+    camera.rotation.y = -0.0066722240508255886 //100 *0.0174533
+    camera.rotation.z = -0.00025608016552217886 //-100 *0.0174533 */
 
+	controls = new OrbitControls(camera, renderer.domElement);
+	//controls.target.set(0 , 0 , 0 );
 	controls.enablePan = true;
 	controls.enableDamping = false;
+    controls.autoRotate = false
 	controls.enableZoom = true;
 	controls.zoomSpeed = 1;
 	controls.panSpeed = 1;
 	controls.enableRotate = true;
 
     controls.keyPanSpeed = 100;
+    //controls.update();
+    //camera.rotateY(180 * 0.0174533)
+	camera.position.x = meanX * 0.0;
+	camera.position.y = meanY * 1.3;
+	camera.position.z = meanZ * 2.4;
+/* 
+    camera.rotation.x = -0.03836148783319388 // -100 *0.0174533
+    camera.rotation.y = -0.0066722240508255886 //100 *0.0174533
+    camera.rotation.z = -0.00025608016552217886 //-100 *0.0174533 */
+    
+    //camera.lookAt(wall1.position)
+	
 
-	controls.update();
+    
+    
 	document.addEventListener("mousemove", onPointerMove);
     document.addEventListener("mousedown", onMouseDown);
     document.addEventListener("mouseup", onMouseUp);
@@ -514,9 +520,11 @@ function onPointerMove(event: any) {
 export function animate() {
 	requestAnimationFrame(animate);
 
-	controls.update();
+	//controls.update();
 	render();
 	//stats.update();
+
+    //console.log(camera.rotation)
 }
 
 function render() {
