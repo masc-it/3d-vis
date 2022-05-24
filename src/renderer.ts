@@ -29,7 +29,36 @@
 import './index.css';
 console.log('👋 This message is being logged by "renderer.js", included via webpack');
 
-import { init, animate } from './scatter';
+/* import { init, animate } from './scatter';
 
 init()
-animate()
+animate() */
+
+import * as scene from "./scene"
+import * as scatter from "./plots/scatter"
+let data = scene.init()
+
+scatter.init(data.scene, data.renderer, data.camera)
+
+
+function anim (  ) {
+
+	const delta = data.clock.getDelta();
+    const updated = data.controls.update( delta );
+
+	// if ( elapsed > 30 ) { return; }
+
+	requestAnimationFrame( anim );
+
+    scatter.render()
+    data.renderer.render( data.scene, data.camera );
+	/* if ( updated ) {
+
+        data.renderer.render( data.scene, data.camera );
+        //console.log( 'rendered' );
+
+	} */
+
+}
+
+anim()

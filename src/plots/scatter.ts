@@ -24,6 +24,7 @@ import {
 	MeshBasicMaterial,
 	MeshLambertMaterial,
 	MeshPhongMaterial,
+	OrthographicCamera,
 	PerspectiveCamera,
 	Raycaster,
 	Renderer,
@@ -33,18 +34,19 @@ import {
 	Vector3,
 	WebGLRenderer,
 } from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+
+
 import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
 import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
 import { SelectionBox } from "three/examples/jsm/interactive/SelectionBox.js";
 import { SelectionHelper } from "three/examples/jsm/interactive/SelectionHelper.js";
 
 let container, stats;
-let camera: PerspectiveCamera;
+let _camera: OrthographicCamera;
 
-let scene: Scene;
+let _scene: Scene;
 let raycaster: Raycaster;
-let renderer: WebGLRenderer;
+let _renderer: WebGLRenderer;
 
 let INTERSECTED: any;
 let wasOpen = false;
@@ -52,7 +54,6 @@ let previousObj: string;
 
 const pointer = new Vector2();
 
-let controls: OrbitControls;
 let colors: Color[] = [];
 
 let imgs: { [string: string]: string } = {};
@@ -97,10 +98,10 @@ function _buildCheckbox(name: string, id: string) {
 	checkbox.onchange = function (e: any) {
 		let layerId = parseInt(id.split("_")[1]) + 2;
 		if (e.currentTarget.checked) {
-			camera.layers.enable(layerId);
+			_camera.layers.enable(layerId);
 			raycaster.layers.enable(layerId);
 		} else {
-			camera.layers.disable(layerId);
+			_camera.layers.disable(layerId);
 			raycaster.layers.disable(layerId);
 		}
 	};
@@ -143,22 +144,14 @@ function buildLegend() {
 	let m = document.getElementById("main");
 	if (m) m.appendChild(container);
 }
+let pointsGroup = new Group()
 
-export function init() {
-	container = document.createElement("div");
-	container.id = "main";
-	document.body.appendChild(container);
-
-	camera = new PerspectiveCamera(
-		70,
-		window.innerWidth / window.innerHeight,
-		0.1,
-		3000
-	);
-
-	scene = new Scene();
+export function init(scene: Scene, renderer: WebGLRenderer, camera: OrthographicCamera) {
+	
+	_scene = scene
+	_renderer = renderer
+	_camera = camera
 	scene.background = new Color(0xf0f0f0);
-
 	const light = new AmbientLight(0xffffff, 1);
 	scene.add(light);
 
@@ -170,25 +163,7 @@ export function init() {
 		camera.layers.enable(element + 2);
 		hist[element] = 0;
 	}
-	const geometry = new SphereBufferGeometry(4, 8, 8);
-	/* const terrainObj = new THREE.Mesh(
-          terrainGeo,
-          new THREE.MeshStandardMaterial({ color: 0xffffff })
-      );
-      terrainObj.name = "terrain"
-      terrainObj.rotation.x = -1.1
-      scene.add(terrainObj) */
-
-	/* var text2 : HTMLDivElement = document.createElement('div');
-      text2.style.position = 'absolute';
-      //text2.style.zIndex = 1;    // if you still don't see the label, try uncommenting this
-      text2.style.width = "100";
-      text2.style.height = "100";
-  
-      text2.innerHTML = "hi there!";
-      text2.style.top = 200 + 'px';
-      text2.style.left = 200 + 'px';
-      document.body.appendChild(text2); */
+	const geometry = new SphereBufferGeometry(0.04, 4, 4);
 
 	buildLegend();
 	let meanX = 0;
@@ -198,6 +173,7 @@ export function init() {
 
 	let minX = 100000;
 
+	
 	for (let i = 0; i < dataObj.length; i++) {
 		let point = dataObj[i];
 		const object = new Mesh(
@@ -209,14 +185,14 @@ export function init() {
 
 		hist[point["label"]] += 1;
 
-		let wX = point["x"] * 200;
+		let wX = point["x"] //* 200;
 		if (wX < minX) {
 			minX = wX;
 		}
 
 		object.position.x = wX; // Math.random() * 400
-		object.position.y = point["y"] * 200;
-		object.position.z = point["z"] * 200;
+		object.position.y = point["y"] //* 200;
+		object.position.z = point["z"] //* 200;
 		if (point["label"] == -1) {
 			object.scale.x *= 0.5;
 			object.scale.y *= 0.5;
@@ -236,33 +212,36 @@ export function init() {
 		}
 
 		object.layers.set(point["label"] + 2);
-		scene.add(object);
-	}
+		pointsGroup.add(object)
 
+	}
+	pointsGroup.name = "#cube-container"
+	pointsGroup.layers.enableAll()
+	pointsGroup.position.set(0,0, 5)
+
+	scene.add(pointsGroup);
 	meanX /= num;
 	meanY /= num;
 	meanZ /= num;
-
+/* 
 	const wallGeo = new BoxGeometry(1, 1, 1);
 	const wall1 = new Mesh(wallGeo, new MeshLambertMaterial({ color: 0x000000 }));
 
-	wall1.position.set(minX - 1200, meanY, meanZ - 100);
-
-	wall1.scale.x *= 2000;
-	wall1.scale.y *= 2000;
-	scene.add(wall1);
+	wall1.scale.x *= 10;
+	wall1.scale.y *= 10;
+	scene.add(wall1); */
 
 	/* camera.position.setX(wall1.position.x) //= wall1.position
     camera.position.setY(wall1.position.y)
     camera.position.setZ(wall1.position.z - 100) */
 
-	const fontt = new FontLoader().parse(typefaceFont);
+	/* const fontt = new FontLoader().parse(typefaceFont);
 
 	for (let index = 0; index < data["labels"].length; index++) {
 		const element = data["labels"][index];
 
 		const h = hist[element] * 0.5;
-		const histGeometry = new BoxGeometry(30, 1, 30);
+		const histGeometry = new BoxGeometry(1, 1, 1);
 		const object = new Mesh(
 			histGeometry,
 			new MeshLambertMaterial({
@@ -270,12 +249,8 @@ export function init() {
 			})
 		);
 
-		object.position.set(minX - 1000 + 50 * index, meanY, meanZ);
+		object.position.set(minX  + 1 * index, meanY, meanZ);
 		object.rotation.y = 0.2;
-
-		/* object.position.x = meanX + 4 * index;
-        object.position.y = 100
-        object.position.z = meanZ  */
 
 		object.scale.y *= h;
 		object.translateY(h / 2);
@@ -298,27 +273,20 @@ export function init() {
 
 		scene.add(object);
 		scene.add(tMesh);
-	}
+	} */
 
 	raycaster = new Raycaster();
 	raycaster.layers.enableAll();
-	renderer = new WebGLRenderer({ antialias: true });
-	renderer.setPixelRatio(window.devicePixelRatio);
-	renderer.setSize(window.innerWidth, window.innerHeight);
-	container.appendChild(renderer.domElement);
 
-	camera.position.x = meanX * 0.0;
-	camera.position.y = meanY * 1.3;
-	camera.position.z = meanZ * 2.4;
 	/* 
     camera.rotation.x = -0.03836148783319388 // -100 *0.0174533
     camera.rotation.y = -0.0066722240508255886 //100 *0.0174533
     camera.rotation.z = -0.00025608016552217886 //-100 *0.0174533 */
 
-	const selectionBox = new SelectionBox(camera, scene);
+	/* const selectionBox = new SelectionBox(camera, scene);
 	const helper = new SelectionHelper(selectionBox, renderer, "selectBox");
-
-	document.addEventListener("pointerdown", function (event) {
+ */
+	/* document.addEventListener("pointerdown", function (event) {
 		for (const item of selectionBox.collection) {
             let i : any = item
 			i.material.emissive.set(0x000000);
@@ -367,10 +335,7 @@ export function init() {
             let mat : any = allSelected[i].material
 			mat.emissive.set(0xffffff);
 		}
-	});
-
-    
-    createControls()
+	}); */
 
 	document.addEventListener("mousemove", onPointerMove);
 	document.addEventListener("mousedown", onMouseDown);
@@ -379,24 +344,9 @@ export function init() {
 
 	window.addEventListener("resize", onWindowResize);
 
-	/* const gui = new GUI()
 
-    gui.add(camera.layers, "layers")
-    gui.open() */
-	/* const gui = new GUI()
-      
-      const cameraFolder = gui.addFolder('Camera')
-      cameraFolder.add(camera.position, 'z', -1000, 1000, 5)
-      cameraFolder.add(camera.position, 'x', -1000, 1000, 5)
-      cameraFolder.add(camera.position, 'y', -1000, 1000, 5)
-      cameraFolder.add(camera.rotation, 'x', -2*Math.PI,  Math.PI * 2, 0.01)
-      cameraFolder.add(camera.rotation, 'y', -2*Math.PI,  Math.PI * 2, 0.01)
-      cameraFolder.add(camera.rotation, 'z', -2*Math.PI,  Math.PI * 2, 0.01)
-      cameraFolder.open() */
+    createMenu()
 
-      createMenu()
-
-	return container;
 }
 
 
@@ -410,7 +360,7 @@ function createMenu() {
     selectMode.type = "button"
     selectMode.textContent = "Select mode"
     selectMode.onclick = () => {
-        controls.dispose()
+        //controls.dispose()
     }
 
     container.appendChild(selectMode)
@@ -418,20 +368,6 @@ function createMenu() {
     let m = document.getElementById("main");
 	if (m) m.appendChild(container)
 
-}
-
-function createControls() {
-    controls = new OrbitControls(camera, renderer.domElement);
-	//controls.target.set(0 , 0 , 0 );
-	controls.enablePan = true;
-	controls.enableDamping = false;
-	controls.autoRotate = false;
-	controls.enableZoom = true;
-	controls.zoomSpeed = 1;
-	controls.panSpeed = 1;
-	controls.enableRotate = true;
-	controls.keyPanSpeed = 100;
-	
 }
 
 let isMouseDown = false;
@@ -463,10 +399,10 @@ function onMouseUp() {
 	isMouseDown = false;
 }
 function onWindowResize() {
-	camera.aspect = window.innerWidth / window.innerHeight;
-	camera.updateProjectionMatrix();
+	//_camera.aspect = window.innerWidth / window.innerHeight;
+	_camera.updateProjectionMatrix();
 
-	renderer.setSize(window.innerWidth, window.innerHeight);
+	_renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
 function buildPopup(obj: Mesh, top: any, left: any) {
@@ -553,52 +489,35 @@ function onPointerMove(event: any) {
 	}
 }
 
-//
+export function render() {
 
-export function animate() {
-	requestAnimationFrame(animate);
+	raycaster.setFromCamera(pointer, _camera);
 
-	//controls.update();
-	render();
-	//stats.update();
-
-	//console.log(camera.rotation)
-}
-
-function render() {
-	//theta += 0.1;
-
-	/* camera.position.x = radius * Math.sin(THREE.MathUtils.degToRad(theta));
-    camera.position.y = radius * Math.sin(THREE.MathUtils.degToRad(theta));
-    camera.position.z = radius * Math.cos(THREE.MathUtils.degToRad(theta));
-    camera.lookAt(scene.position);
-  
-    camera.updateMatrixWorld(); */
-
-	// find intersections
-
-	raycaster.setFromCamera(pointer, camera);
-
-	const intersects = raycaster.intersectObjects(scene.children, false);
+	const intersects = raycaster.intersectObjects(pointsGroup.children, false);
 
 	try {
 		if (intersects.length > 0) {
+			
+			//console.log(intersects[0].object)
 			if (INTERSECTED != intersects[0].object) {
-				if (INTERSECTED)
-					INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
+				/* if (INTERSECTED)
+					INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex); */
 				if (intersects[0].object.name.startsWith("#cube")) {
+					//console.log("intersected")
 					INTERSECTED = intersects[0].object;
-					INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
-					INTERSECTED.material.emissive.setHex(0xff0000);
+					/* INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
+					INTERSECTED.material.emissive.setHex(0xff0000); */
 				}
 			}
 		} else {
+			INTERSECTED = undefined;
+			/* //console.log("nop")
 			if (INTERSECTED) {
 				INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
 			}
 
-			INTERSECTED = undefined;
+			INTERSECTED = undefined; */
 		}
 	} catch (error) {}
-	renderer.render(scene, camera);
+	//_renderer.render(_scene, _camera);
 }
