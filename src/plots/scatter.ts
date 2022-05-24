@@ -11,9 +11,10 @@ import hFont from "./Musa_Regular.json"
 import typefaceFont from 'three/examples/fonts/helvetiker_regular.typeface.json' */
 import typefaceFont from "three/examples/fonts/helvetiker_regular.typeface.json";
 
-import { GUI } from "dat.gui";
+import { Modal } from 'bootstrap';
 import {
 	AmbientLight,
+	Box3,
 	BoxBufferGeometry,
 	BoxGeometry,
 	Camera,
@@ -40,6 +41,7 @@ import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
 import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
 import { SelectionBox } from "three/examples/jsm/interactive/SelectionBox.js";
 import { SelectionHelper } from "three/examples/jsm/interactive/SelectionHelper.js";
+import CameraControls from "camera-controls";
 
 let container, stats;
 let _camera: OrthographicCamera;
@@ -47,7 +49,7 @@ let _camera: OrthographicCamera;
 let _scene: Scene;
 let raycaster: Raycaster;
 let _renderer: WebGLRenderer;
-
+let _controls : CameraControls
 let INTERSECTED: any;
 let wasOpen = false;
 let previousObj: string;
@@ -57,6 +59,12 @@ const pointer = new Vector2();
 let colors: Color[] = [];
 
 let imgs: { [string: string]: string } = {};
+
+let selectionMode = false
+let selectionBox : SelectionBox // = new SelectionBox(camera, scene);
+let selectionHelper : SelectionHelper //= new SelectionHelper(selectionBox, renderer, "selectBox");
+
+let myModalAlternative : Modal
 
 function shuffle(array: any[]) {
 	let currentIndex = array.length,
@@ -146,11 +154,12 @@ function buildLegend() {
 }
 let pointsGroup = new Group()
 
-export function init(scene: Scene, renderer: WebGLRenderer, camera: OrthographicCamera) {
+export function init(scene: Scene, renderer: WebGLRenderer, camera: OrthographicCamera, controls: CameraControls) {
 	
 	_scene = scene
 	_renderer = renderer
 	_camera = camera
+	_controls = controls
 	scene.background = new Color(0xf0f0f0);
 	const light = new AmbientLight(0xffffff, 1);
 	scene.add(light);
@@ -166,14 +175,7 @@ export function init(scene: Scene, renderer: WebGLRenderer, camera: Orthographic
 	const geometry = new SphereBufferGeometry(0.04, 4, 4);
 
 	buildLegend();
-	let meanX = 0;
-	let meanY = 0;
-	let meanZ = 0;
-	let num = 0;
 
-	let minX = 100000;
-
-	
 	for (let i = 0; i < dataObj.length; i++) {
 		let point = dataObj[i];
 		const object = new Mesh(
@@ -186,10 +188,7 @@ export function init(scene: Scene, renderer: WebGLRenderer, camera: Orthographic
 		hist[point["label"]] += 1;
 
 		let wX = point["x"] //* 200;
-		if (wX < minX) {
-			minX = wX;
-		}
-
+		
 		object.position.x = wX; // Math.random() * 400
 		object.position.y = point["y"] //* 200;
 		object.position.z = point["z"] //* 200;
@@ -202,14 +201,8 @@ export function init(scene: Scene, renderer: WebGLRenderer, camera: Orthographic
 		object.name = "#cube-" + i;
 		object.userData = {
 			img_name: point["img_name"],
+			layer: point["label"] + 2
 		};
-
-		if (i < 300) {
-			meanX += object.position.x;
-			meanY += object.position.y;
-			meanZ += object.position.z;
-			num += 1;
-		}
 
 		object.layers.set(point["label"] + 2);
 		pointsGroup.add(object)
@@ -220,9 +213,8 @@ export function init(scene: Scene, renderer: WebGLRenderer, camera: Orthographic
 	pointsGroup.position.set(0,0, 5)
 
 	scene.add(pointsGroup);
-	meanX /= num;
-	meanY /= num;
-	meanZ /= num;
+
+	buildBarChart(hist)
 /* 
 	const wallGeo = new BoxGeometry(1, 1, 1);
 	const wall1 = new Mesh(wallGeo, new MeshLambertMaterial({ color: 0x000000 }));
@@ -231,64 +223,38 @@ export function init(scene: Scene, renderer: WebGLRenderer, camera: Orthographic
 	wall1.scale.y *= 10;
 	scene.add(wall1); */
 
-	/* camera.position.setX(wall1.position.x) //= wall1.position
-    camera.position.setY(wall1.position.y)
-    camera.position.setZ(wall1.position.z - 100) */
-
-	/* const fontt = new FontLoader().parse(typefaceFont);
-
-	for (let index = 0; index < data["labels"].length; index++) {
-		const element = data["labels"][index];
-
-		const h = hist[element] * 0.5;
-		const histGeometry = new BoxGeometry(1, 1, 1);
-		const object = new Mesh(
-			histGeometry,
-			new MeshLambertMaterial({
-				color: element != -1 ? colors[element] : 0xcacaca,
-			})
-		);
-
-		object.position.set(minX  + 1 * index, meanY, meanZ);
-		object.rotation.y = 0.2;
-
-		object.scale.y *= h;
-		object.translateY(h / 2);
-
-		const tGeo = new TextGeometry(hist[element].toString(), {
-			font: fontt,
-			size: 10,
-			height: 5,
-		});
-
-		const tMat = new MeshLambertMaterial({ color: 0xffffff });
-		var tMesh = new Mesh(tGeo, tMat);
-
-		tMesh.position.set(minX - 1015 + 50 * index, meanY, meanZ);
-		tMesh.rotation.y = 0.2;
-		tMesh.translateY(h);
-
-		object.layers.set(element + 2);
-		tMesh.layers.set(element + 2);
-
-		scene.add(object);
-		scene.add(tMesh);
-	} */
 
 	raycaster = new Raycaster();
 	raycaster.layers.enableAll();
 
-	/* 
-    camera.rotation.x = -0.03836148783319388 // -100 *0.0174533
-    camera.rotation.y = -0.0066722240508255886 //100 *0.0174533
-    camera.rotation.z = -0.00025608016552217886 //-100 *0.0174533 */
+	selectionListeners()
+	
+	document.addEventListener("mousemove", onPointerMove);
+	document.addEventListener("mousedown", onMouseDown);
+	document.addEventListener("mouseup", onMouseUp);
+	document.addEventListener("click", onMouseClick);
 
-	/* const selectionBox = new SelectionBox(camera, scene);
-	const helper = new SelectionHelper(selectionBox, renderer, "selectBox");
- */
-	/* document.addEventListener("pointerdown", function (event) {
+	window.addEventListener("resize", onWindowResize);
+
+
+    createMenu()
+	//buildImageGrid()
+
+	myModalAlternative = new Modal(document.getElementById('pics-modal'), {})
+	/* if (myModalAlternative)
+	myModalAlternative.toggle() */
+
+
+}
+
+function selectionListeners() {
+	document.addEventListener("pointerdown", function (event:any) {
+		if (event.target.classList.contains("interactive")) return
+		if ( !selectionMode) return
 		for (const item of selectionBox.collection) {
             let i : any = item
+			if (!i.name.startsWith("#cube")) continue
+			if (!_camera.layers.isEnabled(i.userData["layer"])) continue
 			i.material.emissive.set(0x000000);
 		}
 
@@ -299,11 +265,17 @@ export function init(scene: Scene, renderer: WebGLRenderer, camera: Orthographic
 		);
 	});
 
-	document.addEventListener("pointermove", function (event) {
-		if (helper.isDown) {
+	document.addEventListener("pointermove", function (event:any) {
+
+		if (event.target.classList.contains("interactive")) return
+		if ( !selectionMode) return
+		if (selectionHelper.isDown) {
 			for (let i = 0; i < selectionBox.collection.length; i++) {
 
-                let mat : any = selectionBox.collection[i].material
+				let el = selectionBox.collection[i]
+				if (!el.name.startsWith("#cube")) continue
+				if (!_camera.layers.isEnabled(el.userData["layer"])) continue
+                let mat : any = el.material
 				mat.emissive.set(0x000000);
 			}
 
@@ -316,13 +288,20 @@ export function init(scene: Scene, renderer: WebGLRenderer, camera: Orthographic
 			const allSelected = selectionBox.select();
 
 			for (let i = 0; i < allSelected.length; i++) {
-                let mat : any = allSelected[i].material
+				let el = allSelected[i]
+				if (!el.name.startsWith("#cube")) continue
+				if (!_camera.layers.isEnabled(el.userData["layer"])) continue
+                let mat : any = el.material
 				mat.emissive.set(0xffffff);
 			}
 		}
 	});
 
-	document.addEventListener("pointerup", function (event) {
+	document.addEventListener("pointerup", function (event:any) {
+
+		if (selectionBox == undefined || selectionBox.collection.length == 0) return
+		if (event.target.classList.contains("interactive")) return
+		if ( !selectionMode) return
 		selectionBox.endPoint.set(
 			(event.clientX / window.innerWidth) * 2 - 1,
 			-(event.clientY / window.innerHeight) * 2 + 1,
@@ -330,25 +309,119 @@ export function init(scene: Scene, renderer: WebGLRenderer, camera: Orthographic
 		);
 
 		const allSelected = selectionBox.select();
-
+		
+		console.log( "camera: "+  _camera.layers.mask.toString(2))
+		let imgNames : string[] = []
 		for (let i = 0; i < allSelected.length; i++) {
-            let mat : any = allSelected[i].material
-			mat.emissive.set(0xffffff);
+			let el = allSelected[i]
+			if (!el.name.startsWith("#cube")) continue
+			
+			if (!_camera.layers.isEnabled(el.userData["layer"])){ 
+				continue
+			}
+			imgNames.push(el.userData["img_name"])
+            let mat : any = el.material
+			mat.emissive.set(0x000000);
 		}
-	}); */
 
-	document.addEventListener("mousemove", onPointerMove);
-	document.addEventListener("mousedown", onMouseDown);
-	document.addEventListener("mouseup", onMouseUp);
-	document.addEventListener("click", onMouseClick);
+		
+		if (imgNames.length > 0)
+			buildImageGrid(imgNames)
+		imgNames = []
+		selectionBox = new SelectionBox(_camera, _scene);
+		selectionHelper = new SelectionHelper(selectionBox, _renderer, "selectBox");
 
-	window.addEventListener("resize", onWindowResize);
 
-
-    createMenu()
-
+	});
 }
 
+const chartGroup = new Group()
+function buildBarChart(hist : {[k:number]: number}) {
+	const fontt = new FontLoader().parse(typefaceFont);
+
+	chartGroup.layers.enableAll()
+	const barSpacing = 2.0
+	for (let index = 0; index < data["labels"].length; index++) {
+		const element = data["labels"][index];
+
+		const h = hist[element] * 0.01;
+		const histGeometry = new BoxGeometry(1, 1, 1);
+		const object = new Mesh(
+			histGeometry,
+			new MeshLambertMaterial({
+				color: element != -1 ? colors[element] : 0xcacaca,
+			})
+		);
+		
+		const barGroup = new Group()
+		barGroup.layers.enable(element+2)
+
+		object.position.set(barSpacing*index, 0, 0)
+
+		//object.rotation.y = 0.2;
+
+		object.scale.y *= h;
+		object.translateY(h / 2);
+
+		const tGeo = new TextGeometry(hist[element].toString(), {
+			font: fontt,
+			size: 0.8,
+			height: 0.5,
+		});
+
+		const tMat = new MeshLambertMaterial({ color: 0xffffff });
+		var tMesh = new Mesh(tGeo, tMat);
+
+		let v = new Vector3()
+		let b = new Box3().setFromObject(tMesh)
+		b.getSize(v)
+		let fontW = v.x
+		
+		tMesh.position.set(barSpacing*index - fontW/2 , 0, 0);
+
+		tMesh.translateY(h);
+
+		object.layers.set(element + 2);
+		tMesh.layers.set(element + 2);
+
+		barGroup.add(object)
+		barGroup.add(tMesh)
+		chartGroup.add(barGroup)
+		
+
+		/* 
+		console.log(b)
+		console.log(v) */
+
+		
+	}
+	chartGroup.position.set(20,1,10)
+	_scene.add(chartGroup)
+}
+
+function buildImageGrid(imgNames: string[]) {
+	
+	let container = document.getElementById("imgs-container");
+
+	container.innerHTML = ""
+
+	imgNames.forEach(element => {
+		
+		let b64 = window.fs.readFileSync(
+			conf["dataset_path"] + element,
+			{ encoding: "base64" }
+		);
+		let img = document.createElement("img");
+		img.src = `data:image/jpg;base64,${b64}`;
+		img.width = 400;
+		img.height = 400;
+		
+		container.appendChild(img);
+	});
+
+	myModalAlternative.toggle()
+	
+}
 
 function createMenu() {
     
@@ -356,13 +429,27 @@ function createMenu() {
     container.style.position = "absolute"
     container.style.top = "10px"
     container.style.left = "100px"
-    let selectMode = document.createElement("button")
+    let toHistogram = document.createElement("button")
+    toHistogram.type = "button"
+	toHistogram.classList.add("btn", "btn-primary")
+    toHistogram.textContent = "Histrogram"
+    toHistogram.onclick = () => {
+        //controls.dispose()
+		_controls.fitToBox(chartGroup, true)
+    }
+
+	let selectMode = document.createElement("button")
     selectMode.type = "button"
     selectMode.textContent = "Select mode"
     selectMode.onclick = () => {
         //controls.dispose()
+		selectionMode = !selectionMode
+		_controls.enabled = !_controls.enabled
+		selectionBox = new SelectionBox(_camera, _scene);
+		selectionHelper = new SelectionHelper(selectionBox, _renderer, "selectBox"); 
     }
 
+	container.appendChild(toHistogram)
     container.appendChild(selectMode)
 
     let m = document.getElementById("main");

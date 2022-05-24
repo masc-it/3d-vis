@@ -26,7 +26,7 @@
  * ```
  */
 
-import './index.css';
+//import './index.css';
 console.log('👋 This message is being logged by "renderer.js", included via webpack');
 
 /* import { init, animate } from './scatter';
@@ -34,11 +34,15 @@ console.log('👋 This message is being logged by "renderer.js", included via we
 init()
 animate() */
 
+import 'bootstrap/dist/css/bootstrap.min.css';
+
+
 import * as scene from "./scene"
 import * as scatter from "./plots/scatter"
+
 let data = scene.init()
 
-scatter.init(data.scene, data.renderer, data.camera)
+scatter.init(data.scene, data.renderer, data.camera, data.controls)
 
 
 function anim (  ) {

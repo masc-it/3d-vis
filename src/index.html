@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html>
   <head>
-    
-    <meta charset="UTF-8" />
+  
+  <meta charset="UTF-8" />
+
     <title>Hello World!</title>
 
-    <style>
+
+<style>
       html {
         overflow: hidden;
       }
@@ -19,8 +21,29 @@
         top: 10px;
       }
     </style>
+
+
   </head>
   
+  <div class="modal fade interactive" tabindex="-1" aria-labelledby="exampleModalLabel" id="pics-modal" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+          <button type="button" class="interactive btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+        </div>
+        <div class="modal-body">
+          <div id="imgs-container">
+
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary interactive" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary interactive">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
   <body id="main">
     
   </body>

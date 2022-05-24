@@ -37,16 +37,16 @@ let mainBody = document.getElementById("main")
 
 function createSettings() {
     
-    let buttons = [
+    let buttons : HTMLElement[] = [
 
-        GEN.createButton("controls-rotate", "Roate 45",
+        /* GEN.createButton("controls-rotate", "Roate 45",
             (e) => {
                 cameraControls.rotate(  45 * THREE.MathUtils.DEG2RAD, 0, true )
             },
             {
                 "color": "red"
             }
-        )
+        ) */
 
     ]
 
