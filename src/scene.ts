@@ -45,6 +45,10 @@ export class World {
         const gridHelper = new THREE.GridHelper( 500, 50 );
         gridHelper.position.y = - 1;
         this.scene.add( gridHelper );
+
+        this.scene.background = new THREE.Color(0xf0f0f0);
+		const light = new THREE.AmbientLight(0xffffff, 1);
+		this.scene.add(light);
     
         this.renderer.render( this.scene, this.camera );
     

@@ -36,13 +36,13 @@ import {
 	WebGLRenderer,
 } from "three";
 
-import { FontLoader } from "three/examples/jsm/loaders/FontLoader.js";
-import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
+
 import { SelectionBox } from "three/examples/jsm/interactive/SelectionBox.js";
 import { SelectionHelper } from "three/examples/jsm/interactive/SelectionHelper.js";
-import CameraControls from "camera-controls";
+
 import { Plot } from "./plot";
 import { createColors, shuffle } from "./utils";
+import { Bar } from "./bar";
 
 export class ScatterPlot extends Plot {
 	raycaster: Raycaster;
@@ -68,23 +68,27 @@ export class ScatterPlot extends Plot {
 	isMouseDown = false;
 	mouseClick = false;
 
+	labelColors : { [k: number]: Color } = {};
+
+
 	init = () => {
-		this.scene.background = new Color(0xf0f0f0);
-		const light = new AmbientLight(0xffffff, 1);
-		this.scene.add(light);
 
 		let hist: { [k: number]: number } = {};
+
+		this.colors = createColors(data["num_labels"])
+		this.colors = shuffle(this.colors)
 
 		for (let index = 0; index < data["labels"].length; index++) {
 			const element = data["labels"][index];
 
 			this.camera.layers.enable(element + 2);
 			hist[element] = 0;
+			this.labelColors[element] = this.colors[index]
+
 		}
 		const geometry = new SphereBufferGeometry(0.04, 4, 4);
 
-		this.colors = createColors(data["num_labels"])
-		this.colors = shuffle(this.colors)
+		
 
 		this.buildLegend();
 		for (let i = 0; i < dataObj.length; i++) {
@@ -92,7 +96,7 @@ export class ScatterPlot extends Plot {
 			const object = new Mesh(
 				geometry,
 				new MeshLambertMaterial({
-					color: point["label"] != -1 ? this.colors[point["label"]] : 0xcacaca,
+					color: point["label"] != -1 ? this.labelColors[point["label"]] : 0xcacaca,
 				})
 			);
 
@@ -124,8 +128,6 @@ export class ScatterPlot extends Plot {
 
 		this.scene.add(this.pointsGroup);
 
-		//buildBarChart(hist);
-
 		this.raycaster = new Raycaster();
 		this.raycaster.layers.enableAll();
 
@@ -141,6 +143,14 @@ export class ScatterPlot extends Plot {
 		this.createMenu();
 
 		this.myModalAlternative = new Modal(document.getElementById("pics-modal"), {});
+
+		const barData = {
+			"hist" : hist,
+			"labels": data["labels"],
+			"colors": this.labelColors
+		}
+		let barChart = new Bar(this.scene, this.renderer, this.camera, this.controls, barData)
+		
 	}
 
 	render = () => {
@@ -201,7 +211,7 @@ export class ScatterPlot extends Plot {
 		t.textContent = name;
 	
 		if (idNum >= 0) {
-			t.style.color = "#" + this.colors[idNum].getHexString();
+			t.style.color = "#" + this.labelColors[idNum].getHexString();
 		} else {
 			t.style.color = "#cacaca";
 		}
