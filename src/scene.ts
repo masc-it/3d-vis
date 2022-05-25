@@ -53,6 +53,8 @@ export class World {
         this.renderer.render( this.scene, this.camera );
     
         this.createSettings()
+
+        this.onWindowResize()
         
     }
 
@@ -87,5 +89,13 @@ export class World {
     
     
     }
+
+    private onWindowResize = () => {
+		
+        //this.camera.aspect = window.innerWidth / window.innerHeight;
+		this.camera.updateProjectionMatrix();
+	
+		this.renderer.setSize(window.innerWidth, window.innerHeight);
+	}
 
 }

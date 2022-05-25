@@ -28,36 +28,41 @@
 
 //import './index.css';
 
-import 'bootstrap/dist/css/bootstrap.min.css';
+import "bootstrap/dist/css/bootstrap.min.css";
 
+import * as scene from "./scene";
+import * as scatter from "./plots/scatter";
 
-import * as scene from "./scene"
-import * as scatter from "./plots/scatter"
+function renderWorld() {
+	let world = new scene.World();
 
-let world = new scene.World()
+	let scatterPlot = new scatter.ScatterPlot(
+		world.scene,
+		world.renderer,
+		world.camera,
+		world.cameraControls
+	);
+	scatterPlot.init();
 
-let scatterPlot = new scatter.ScatterPlot(world.scene, world.renderer, world.camera, world.cameraControls)
-scatterPlot.init()
+	function anim() {
+		const delta = world.clock.getDelta();
+		const updated = world.cameraControls.update(delta);
 
+		// if ( elapsed > 30 ) { return; }
 
-function anim (  ) {
+		requestAnimationFrame(anim);
 
-	const delta = world.clock.getDelta();
-    const updated = world.cameraControls.update( delta );
-
-	// if ( elapsed > 30 ) { return; }
-
-	requestAnimationFrame( anim );
-
-    scatterPlot.render()
-    world.renderer.render( world.scene, world.camera );
-	/* if ( updated ) {
+		scatterPlot.render();
+		world.renderer.render(world.scene, world.camera);
+		/* if ( updated ) {
 
         data.renderer.render( data.scene, data.camera );
         //console.log( 'rendered' );
 
 	} */
+	}
 
+	anim();
 }
 
-anim()
+renderWorld()

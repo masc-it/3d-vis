@@ -41,7 +41,7 @@ import { SelectionBox } from "three/examples/jsm/interactive/SelectionBox.js";
 import { SelectionHelper } from "three/examples/jsm/interactive/SelectionHelper.js";
 
 import { Plot } from "./plot";
-import { createColors, shuffle } from "./utils";
+import { createColors, CustomElement, shuffle } from "./utils";
 import { Bar } from "./bar";
 
 export class ScatterPlot extends Plot {
@@ -61,7 +61,7 @@ export class ScatterPlot extends Plot {
 	selectionBox: SelectionBox;
 	selectionHelper: SelectionHelper;
 
-	myModalAlternative: Modal;
+	imageGridModal: Modal;
 
 	pointsGroup = new Group()
 
@@ -70,6 +70,7 @@ export class ScatterPlot extends Plot {
 
 	labelColors : { [k: number]: Color } = {};
 
+	barChart : Bar
 
 	init = () => {
 
@@ -87,8 +88,6 @@ export class ScatterPlot extends Plot {
 
 		}
 		const geometry = new SphereBufferGeometry(0.04, 4, 4);
-
-		
 
 		this.buildLegend();
 		for (let i = 0; i < dataObj.length; i++) {
@@ -138,18 +137,16 @@ export class ScatterPlot extends Plot {
 		document.addEventListener("mouseup", this.onMouseUp);
 		document.addEventListener("click", this.onMouseClick);
 
-		window.addEventListener("resize", this.onWindowResize);
-
 		this.createMenu();
 
-		this.myModalAlternative = new Modal(document.getElementById("pics-modal"), {});
+		this.imageGridModal = new Modal(document.getElementById("pics-modal"), {});
 
 		const barData = {
 			"hist" : hist,
 			"labels": data["labels"],
 			"colors": this.labelColors
 		}
-		let barChart = new Bar(this.scene, this.renderer, this.camera, this.controls, barData)
+		this.barChart = new Bar(this.scene, this.renderer, this.camera, this.controls, barData)
 		
 	}
 
@@ -353,7 +350,7 @@ export class ScatterPlot extends Plot {
 			container.appendChild(img);
 		});
 	
-		this.myModalAlternative.toggle()
+		this.imageGridModal.toggle()
 		
 	}
 	
@@ -361,28 +358,51 @@ export class ScatterPlot extends Plot {
 		
 		let container = document.createElement("div")
 		container.style.position = "absolute"
+		container.style.maxWidth = "140px"
 		container.style.top = "10px"
 		container.style.left = "100px"
+		container.classList.add("row")
+
 		let toHistogram = document.createElement("button")
 		toHistogram.type = "button"
-		toHistogram.classList.add("btn", "btn-primary")
-		toHistogram.textContent = "Histrogram"
+		toHistogram.classList.add("btn", "btn-outline-dark", "mb-1")
+		toHistogram.textContent = "Find histrogram"
 		toHistogram.onclick = () => {
 			//controls.dispose()
-			//this.controls.fitToBox(this.chartGroup, true)
+			this.controls.fitToBox(this.barChart.chartGroup, true)
+		}
+
+		let findCluster = document.createElement("button")
+		findCluster.type = "button"
+		findCluster.classList.add("btn", "btn-outline-dark", "mb-1")
+		findCluster.textContent = "Find scatter plot"
+		findCluster.onclick = () => {
+			//controls.dispose()
+			this.controls.fitToBox(this.pointsGroup, true)
 		}
 	
 		let selectMode = document.createElement("button")
 		selectMode.type = "button"
-		selectMode.textContent = "Select mode"
+		selectMode.textContent = "Select mode (OFF)"
+		selectMode.classList.add("btn", "btn-outline-dark")
+
+		let custom_selectMode = new CustomElement(selectMode)
+		custom_selectMode.subscribe("change", (e) => {
+
+			e.target.textContent = this.selectionMode ? "Select mode (ON)" : "Select mode (OFF)"
+
+		})
+
 		selectMode.onclick = () => {
-			//controls.dispose()
+
 			this.selectionMode = !this.selectionMode
 			this.controls.enabled = !this.controls.enabled
 			this.selectionBox = new SelectionBox(this.camera, this.scene);
-			this.selectionHelper = new SelectionHelper(this.selectionBox, this.renderer, "selectBox"); 
+			this.selectionHelper = new SelectionHelper(this.selectionBox, this.renderer, "selectBox");
+			custom_selectMode.notify("change")
 		}
-	
+		
+		container.appendChild(findCluster)
 		container.appendChild(toHistogram)
 		container.appendChild(selectMode)
 	
@@ -401,7 +421,7 @@ export class ScatterPlot extends Plot {
 				this.mouseClick = false;
 				this.wasOpen = false;
 				this.INTERSECTED = undefined;
-				let d = document.getElementById("lol");
+				let d = document.getElementById("preview-popup");
 				if (d != undefined) {
 					d.remove();
 				}
@@ -418,16 +438,10 @@ export class ScatterPlot extends Plot {
 	private onMouseUp = () => {
 		this.isMouseDown = false;
 	}
-	private onWindowResize = () => {
-		//_camera.aspect = window.innerWidth / window.innerHeight;
-		this.camera.updateProjectionMatrix();
-	
-		this.renderer.setSize(window.innerWidth, window.innerHeight);
-	}
 	
 	buildPopup = (obj: Mesh, top: any, left: any) => {
 		if (this.wasOpen && this.previousObj != undefined && obj.name == this.previousObj) {
-			let d = document.getElementById("lol");
+			let d = document.getElementById("preview-popup");
 			if (d != undefined) {
 				d.style.left = left + 20 + "px";
 				d.style.top = top + "px";
@@ -436,7 +450,7 @@ export class ScatterPlot extends Plot {
 			return;
 		} else {
 			try {
-				let d = document.getElementById("lol");
+				let d = document.getElementById("preview-popup");
 				if (d) d.remove();
 			} catch (error) {}
 		}
@@ -476,10 +490,7 @@ export class ScatterPlot extends Plot {
 		};
 		div.appendChild(openBtn);
 	
-		/* div.innerHTML = `<img class='preview' width='400px' height='400px' src='data:image/jpg;base64,${
-			imgs[obj.name]
-		}'/>`; */
-		div.id = "lol";
+		div.id = "preview-popup";
 		div.classList.add("preview");
 		div.style.position = "absolute";
 		div.style.left = left + 20 + "px";
@@ -500,7 +511,7 @@ export class ScatterPlot extends Plot {
 		} else {
 			if (this.wasOpen && !this.mouseClick) {
 				try {
-					let l = document.getElementById("lol");
+					let l = document.getElementById("preview-popup");
 					if (l) l.remove();
 				} catch (error) {}
 				this.wasOpen = false;

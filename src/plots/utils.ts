@@ -30,3 +30,30 @@ export function createColors(n:number) {
     }
     return colors
 }
+
+export function createCallback(callbackName: string, element: HTMLElement, f : (e: any) => any ){
+	let event : any = new Event(callbackName);
+
+	element.addEventListener(event, f, false)
+}
+
+export class CustomElement {
+	element: HTMLElement;
+
+	events : {[k:string]: any} = {}
+
+	constructor(element: HTMLElement){
+		this.element = element
+	}
+
+	subscribe = (eventName: string, f : (e: any) => any ) => {
+		let event : any = new Event(eventName);
+		this.events[eventName] = event
+		this.element.addEventListener(eventName, f)
+	}
+
+	notify = (eventName : string) => {
+		this.element.dispatchEvent(this.events[eventName])
+	}
+
+}
