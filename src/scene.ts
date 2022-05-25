@@ -1,5 +1,7 @@
 import * as THREE from "three";
 import CameraControls from "camera-controls";
+import { Object3D } from "three";
+import { Plot } from "./plots/plot";
 
 CameraControls.install( { THREE: THREE } );
 
@@ -18,8 +20,30 @@ export class World {
 
     mainBody = document.getElementById("main")
 
+    objects : Plot[] = []
+
     constructor() {
         this.init()
+    }
+
+    addObject = (object: Plot) => {
+        this.objects.push(object) 
+    }
+
+
+    render = (callRenderer:boolean) => {
+
+        for (let index = 0; index < this.objects.length; index++) {
+            const element = this.objects[index];
+            element.render()
+        }
+        
+        if (callRenderer)
+            this.refresh()
+    }
+
+    refresh = () => {
+        this.renderer.render(this.scene, this.camera);
     }
 
     private init = () => {

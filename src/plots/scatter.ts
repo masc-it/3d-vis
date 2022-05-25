@@ -191,7 +191,12 @@ export class ScatterPlot extends Plot {
 		checkbox.setAttribute("checked", "true");
 	
 		let idNum = parseInt(id.split("_")[1]);
-	
+		
+		let checkboxCustom = new CustomElement(checkbox)
+		checkboxCustom.subscribe("checked", (e) => {
+			this.renderer.render(this.scene, this.camera)
+		})
+
 		checkbox.onchange = (e: any) => {
 			let layerId = parseInt(id.split("_")[1]) + 2;
 			if (e.currentTarget.checked) {
@@ -201,6 +206,7 @@ export class ScatterPlot extends Plot {
 				this.camera.layers.disable(layerId);
 				this.raycaster.layers.disable(layerId);
 			}
+			checkboxCustom.notify("checked")
 		};
 		var label = document.createElement("label");
 		label.htmlFor = id;

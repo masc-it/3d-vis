@@ -44,4 +44,5 @@ export abstract class Plot {
 	}
 
     init: () => void
+	render : () => void
 }

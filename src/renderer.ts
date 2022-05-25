@@ -43,6 +43,9 @@ function renderWorld() {
 		world.cameraControls
 	);
 	scatterPlot.init();
+    
+    world.addObject(scatterPlot)
+
 
 	function anim() {
 		const delta = world.clock.getDelta();
@@ -52,8 +55,10 @@ function renderWorld() {
 
 		requestAnimationFrame(anim);
 
-		scatterPlot.render();
-		world.renderer.render(world.scene, world.camera);
+        world.render(updated)
+        
+		//scatterPlot.render();
+		//world.renderer.render(world.scene, world.camera);
 		/* if ( updated ) {
 
         data.renderer.render( data.scene, data.camera );
