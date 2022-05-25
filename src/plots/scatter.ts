@@ -6,34 +6,16 @@ let rawdata = window.fs.readFileSync(conf["data_json"], "utf-8");
 let data = JSON.parse(rawdata);
 
 let dataObj = data["data"];
-/* 
-import hFont from "./Musa_Regular.json"
-import typefaceFont from 'three/examples/fonts/helvetiker_regular.typeface.json' */
-import typefaceFont from "three/examples/fonts/helvetiker_regular.typeface.json";
 
 import { Modal } from "bootstrap";
 import {
-	AmbientLight,
-	Box3,
-	BoxBufferGeometry,
-	BoxGeometry,
-	Camera,
 	Color,
 	Group,
-	Material,
 	Mesh,
-	MeshBasicMaterial,
 	MeshLambertMaterial,
-	MeshPhongMaterial,
-	OrthographicCamera,
-	PerspectiveCamera,
 	Raycaster,
-	Renderer,
-	Scene,
 	SphereBufferGeometry,
 	Vector2,
-	Vector3,
-	WebGLRenderer,
 } from "three";
 
 
@@ -151,7 +133,7 @@ export class ScatterPlot extends Plot {
 	}
 
 	render = () => {
-
+		
 		this.raycaster.setFromCamera(this.pointer, this.camera);
 	
 		const intersects = this.raycaster.intersectObjects(this.pointsGroup.children, false);
@@ -256,7 +238,9 @@ export class ScatterPlot extends Plot {
 				let i : any = item
 				if (!i.name.startsWith("#cube")) continue
 				if (!this.camera.layers.isEnabled(i.userData["layer"])) continue
+
 				i.material.emissive.set(0x000000);
+				
 			}
 	
 			this.selectionBox.startPoint.set(
@@ -264,6 +248,7 @@ export class ScatterPlot extends Plot {
 				-(event.clientY / window.innerHeight) * 2 + 1,
 				0.5
 			);
+			this.requestWorldUpdate = true
 		});
 	
 		document.addEventListener("pointermove",  (event:any) => {
@@ -278,14 +263,15 @@ export class ScatterPlot extends Plot {
 					if (!this.camera.layers.isEnabled(el.userData["layer"])) continue
 					let mat : any = el.material
 					mat.emissive.set(0x000000);
+					this.requestWorldUpdate = true
 				}
-	
+				
 				this.selectionBox.endPoint.set(
 					(event.clientX / window.innerWidth) * 2 - 1,
 					-(event.clientY / window.innerHeight) * 2 + 1,
 					0.5
 				);
-	
+				
 				const allSelected = this.selectionBox.select();
 	
 				for (let i = 0; i < allSelected.length; i++) {
@@ -294,7 +280,9 @@ export class ScatterPlot extends Plot {
 					if (!this.camera.layers.isEnabled(el.userData["layer"])) continue
 					let mat : any = el.material
 					mat.emissive.set(0xffffff);
+					this.requestWorldUpdate = true
 				}
+				
 			}
 		});
 	
@@ -311,7 +299,7 @@ export class ScatterPlot extends Plot {
 	
 			const allSelected = this.selectionBox.select();
 			
-			console.log( "camera: "+  this.camera.layers.mask.toString(2))
+			//console.log( "camera: "+  this.camera.layers.mask.toString(2))
 			let imgNames : string[] = []
 			for (let i = 0; i < allSelected.length; i++) {
 				let el = allSelected[i]
@@ -323,7 +311,9 @@ export class ScatterPlot extends Plot {
 				imgNames.push(el.userData["img_name"])
 				let mat : any = el.material
 				mat.emissive.set(0x000000);
+				this.requestWorldUpdate = true
 			}
+			
 	
 			
 			if (imgNames.length > 0)

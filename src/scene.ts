@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import CameraControls from "camera-controls";
-import { Object3D } from "three";
 import { Plot } from "./plots/plot";
 
 CameraControls.install( { THREE: THREE } );
@@ -33,13 +32,21 @@ export class World {
 
     render = (callRenderer:boolean) => {
 
+        let shouldUpdate : boolean = false
         for (let index = 0; index < this.objects.length; index++) {
             const element = this.objects[index];
             element.render()
+            if ( element.requestWorldUpdate){
+                shouldUpdate = true 
+                element.requestWorldUpdate = false
+            }
+                
         }
         
-        if (callRenderer)
+        if (callRenderer || shouldUpdate){
             this.refresh()
+        }
+            
     }
 
     refresh = () => {
