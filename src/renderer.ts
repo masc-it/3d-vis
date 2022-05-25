@@ -27,12 +27,6 @@
  */
 
 //import './index.css';
-console.log('👋 This message is being logged by "renderer.js", included via webpack');
-
-/* import { init, animate } from './scatter';
-
-init()
-animate() */
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -40,22 +34,23 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import * as scene from "./scene"
 import * as scatter from "./plots/scatter"
 
-let data = scene.init()
+let world = new scene.World()
 
-scatter.init(data.scene, data.renderer, data.camera, data.controls)
+let scatterPlot = new scatter.ScatterPlot(world.scene, world.renderer, world.camera, world.cameraControls)
+scatterPlot.init()
 
 
 function anim (  ) {
 
-	const delta = data.clock.getDelta();
-    const updated = data.controls.update( delta );
+	const delta = world.clock.getDelta();
+    const updated = world.cameraControls.update( delta );
 
 	// if ( elapsed > 30 ) { return; }
 
 	requestAnimationFrame( anim );
 
-    scatter.render()
-    data.renderer.render( data.scene, data.camera );
+    scatterPlot.render()
+    world.renderer.render( world.scene, world.camera );
 	/* if ( updated ) {
 
         data.renderer.render( data.scene, data.camera );
