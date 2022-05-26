@@ -59,6 +59,14 @@
                   "preload": {
                     "js": "./src/preload.ts"
                   }
+                },
+                {
+                  "html": "./src/modal/win.html",
+                  "js": "./src/modal/renderer.ts",
+                  "name": "modal_window",
+                  "preload": {
+                    "js": "./src/preload.ts"
+                  }
                 }
               ]
             }

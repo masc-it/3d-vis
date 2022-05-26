@@ -1,5 +1,3 @@
-import $ from "cash-dom";
-
 export function createButton(id: string, text:string, onclick : (e:any) => void, style : { [k:string]: any} ) {
     
     let el = document.createElement("button")
