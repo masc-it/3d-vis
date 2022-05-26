@@ -1,8 +1,8 @@
 {
-  "name": "my-new-app",
-  "productName": "my-new-app",
+  "name": "3d-vis",
+  "productName": "3D-vis",
   "version": "1.0.0",
-  "description": "My Electron application description",
+  "description": "3D data visualization tool",
   "main": ".webpack/main",
   "scripts": {
     "dev": "tsc && electron .",
@@ -14,8 +14,8 @@
   },
   "keywords": [],
   "author": {
-    "name": "onipot",
-    "email": "m.sciancalepore20@studenti.uniba.it"
+    "name": "mascIT",
+    "email": "mauroscianca98@gmail.com"
   },
   "license": "MIT",
   "config": {
@@ -25,7 +25,7 @@
         {
           "name": "@electron-forge/maker-squirrel",
           "config": {
-            "name": "my_new_app"
+            "name": "3D-vis"
           }
         },
         {
