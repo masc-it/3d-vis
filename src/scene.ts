@@ -21,6 +21,8 @@ export class World {
 
     objects : Plot[] = []
 
+    currentObjIndex = 0
+
     constructor() {
         this.init()
     }
@@ -59,26 +61,21 @@ export class World {
         this.clock = new THREE.Clock();
         this.scene  = new THREE.Scene();
         this.camera = new THREE.OrthographicCamera( this.width / - 200, this.width / 200, this.height / 200, this.height / - 200, 1, 1000 );
-        this.camera.position.set( 0, 0, 600 );
+        this.camera.position.set( 10, 20, 600 );
+
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.setSize( this.width, this.height );
+        this.renderer.shadowMap.enabled = true;
+
+		this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+		this.renderer.outputEncoding = THREE.sRGBEncoding;
         document.body.appendChild( this.renderer.domElement );
     
         this.cameraControls = new CameraControls( this.camera, this.renderer.domElement );
-    
-        const mesh = new THREE.Mesh(
-            new THREE.BoxGeometry( 2, 2, 1 ),
-            new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true } )
-        );
-        this.scene.add( mesh );
-    
-        const gridHelper = new THREE.GridHelper( 500, 50 );
-        gridHelper.position.y = - 1;
-        this.scene.add( gridHelper );
 
         this.scene.background = new THREE.Color(0xf0f0f0);
-		const light = new THREE.AmbientLight(0xffffff, 1);
+		const light = new THREE.AmbientLight(0xffffff, 0.5);
 		this.scene.add(light);
     
         this.renderer.render( this.scene, this.camera );
@@ -86,9 +83,32 @@ export class World {
         this.createSettings()
 
         this.onWindowResize()
-        
+        this.onButtonPressed()
     }
 
+    private onButtonPressed() {
+        document.addEventListener("keydown", (event:any) => {
+            var name = event.key;
+            var code = event.code;
+            console.log(name)
+            if (name == "ArrowRight"){
+                this.currentObjIndex += 1
+                
+            } else if (name == "ArrowLeft") {
+                this.currentObjIndex -= 1
+            }
+
+            this.currentObjIndex = this.currentObjIndex % this.objects.length
+
+            this.cameraControls.fitToBox(this.objects[this.currentObjIndex].objectToFocus, true, {
+                paddingLeft: 2,
+                paddingRight: 2,
+                paddingTop: 2,
+                paddingBottom: 2
+            })
+            
+        })
+    }
 
     private createSettings = () => {
     

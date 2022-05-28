@@ -1,4 +1,5 @@
 import {
+    Object3D,
 	OrthographicCamera,
 	Scene,
 	WebGLRenderer,
@@ -13,6 +14,8 @@ export abstract class Plot {
     controls: CameraControls;
     
 	requestWorldUpdate : boolean = false
+
+    objectToFocus : Object3D
 
 	constructor(scene: Scene, renderer: WebGLRenderer, camera: OrthographicCamera, controls: CameraControls) {
 		this.scene = scene

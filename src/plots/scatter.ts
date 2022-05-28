@@ -5,9 +5,15 @@ import {
 	Color,
 	Group,
 	Mesh,
+	MeshBasicMaterial,
 	MeshLambertMaterial,
+	MeshStandardMaterial,
+	PointLight,
 	Raycaster,
 	SphereBufferGeometry,
+	SphereGeometry,
+	SpotLight,
+	SpotLightHelper,
 	Vector2,
 	Vector3,
 } from "three";
@@ -67,7 +73,7 @@ export class ScatterPlot extends Plot {
 			this.labelColors[element] = this.colors[index]
 
 		}
-		const geometry = new SphereBufferGeometry(0.04, 4, 4);
+		const geometry = new SphereBufferGeometry(0.04, 8, 8);
 
 		//this.buildLegend();
 		for (let i = 0; i < this.dataObj.length; i++) {
@@ -81,11 +87,9 @@ export class ScatterPlot extends Plot {
 
 			hist[point["label"]] += 1;
 
-			let wX = point["x"]; //* 200;
-
-			object.position.x = wX; // Math.random() * 400
-			object.position.y = point["y"]; //* 200;
-			object.position.z = point["z"]; //* 200;
+			object.position.x = point["x"];
+			object.position.y = point["y"]; 
+			object.position.z = point["z"]; 
 			if (point["label"] == -1) {
 				object.scale.x *= 0.5;
 				object.scale.y *= 0.5;
@@ -98,14 +102,17 @@ export class ScatterPlot extends Plot {
 				layer: point["label"] + 2,
 			};
 
+			//object.castShadow = true
 			object.layers.set(point["label"] + 2);
 			this.pointsGroup.add(object);
 		}
+		//this.pointsGroup.castShadow = true
 		this.pointsGroup.name = "#cube-" + this.name + "-" + "container";
 		this.pointsGroup.layers.enableAll();
 		this.pointsGroup.position.set(x, y, z); // 0 0 5
 
 		//this.pointsGroup.add(tMesh)
+		this.objectToFocus = this.pointsGroup
 		this.scene.add(this.pointsGroup);
 
 		let groupV = new Vector3()
@@ -129,6 +136,8 @@ export class ScatterPlot extends Plot {
 		
 		boxObject.position.set(groupV.x, y, groupV.z / 1.3)
 		boxObject.translateY(scatterHeight)
+		boxObject.receiveShadow = true
+		
 		this.scene.add(boxObject)
 		
 		this.scene.updateMatrixWorld(true);
@@ -151,6 +160,13 @@ export class ScatterPlot extends Plot {
 
 		tMesh.position.set(boxPos.x + x/2, boxPos.y + y/2 , boxPos.z * 2 );
 		this.scene.add(tMesh)
+
+		const sphere = new SphereGeometry( 0.1, 16, 8 );
+		let light1 = new PointLight( 0xffffff, 0.5, 200 );
+		light1.add( new Mesh( sphere, new MeshBasicMaterial( { color: 0xffffff } ) ) );
+		light1.position.set(boxPos.x + x/2, groupV.y*2 , boxPos.z * 2.5 )
+		this.scene.add(light1)
+
 
 		this.raycaster = new Raycaster();
 		this.raycaster.layers.enableAll();
@@ -286,6 +302,7 @@ export class ScatterPlot extends Plot {
 	}
 
 	private selectionListeners = () => {
+		
 		document.addEventListener("pointerdown", (event:any) => {
 			if (event.target.classList.contains("interactive")) return
 			if ( !this.selectionMode) return

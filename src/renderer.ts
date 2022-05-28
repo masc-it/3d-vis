@@ -41,9 +41,11 @@ function renderWorld() {
 	let configs = getFiles("./configs/", ".json")
 
 	let x = 0
-	configs.forEach(config => {
+	let y = 0
 
-		console.log(config)
+	for (let index = 0; index < configs.length; index++) {
+		const config = configs[index];
+		
 
 		let scatterPlot = new scatter.ScatterPlot(
 			world.scene,
@@ -52,11 +54,22 @@ function renderWorld() {
 			world.cameraControls
 		);
 		scatterPlot.setupData(new DataConfig(readJSONFile(config)))
-		scatterPlot.init(x,0,5);
-
+		scatterPlot.init(x,y,5);
+		
 		world.addObject(scatterPlot)
+		if ( index == 0)
+			world.cameraControls.fitToBox(scatterPlot.pointsGroup, true,{
+                paddingLeft: 2,
+                paddingRight: 2,
+                paddingTop: 2,
+                paddingBottom: 2
+            })
+
 		x += 40
-	});
+		//y += 5
+	}
+
+	
 	
 
 
