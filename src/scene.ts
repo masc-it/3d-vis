@@ -89,8 +89,7 @@ export class World {
     private onButtonPressed() {
         document.addEventListener("keydown", (event:any) => {
             var name = event.key;
-            var code = event.code;
-            console.log(name)
+            
             if (name == "ArrowRight"){
                 this.currentObjIndex += 1
                 

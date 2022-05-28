@@ -34,6 +34,8 @@ import * as scene from "./scene";
 import * as scatter from "./plots/scatter";
 import { getFiles, readJSONFile } from "./utils/files";
 import { DataConfig } from "./utils/dataconfig";
+import { Plot } from "./plots/plot";
+import { Bar } from "./plots/bar";
 
 function renderWorld() {
 	let world = new scene.World();
@@ -46,19 +48,38 @@ function renderWorld() {
 	for (let index = 0; index < configs.length; index++) {
 		const config = configs[index];
 		
+		const dataConfig = new DataConfig(readJSONFile(config))
 
-		let scatterPlot = new scatter.ScatterPlot(
-			world.scene,
-			world.renderer,
-			world.camera,
-			world.cameraControls
-		);
-		scatterPlot.setupData(new DataConfig(readJSONFile(config)))
-		scatterPlot.init(x,y,5);
+		let plot : Plot
+
+		switch (dataConfig.type) {
+			case "scatter":
+				plot = new scatter.ScatterPlot(
+					world.scene,
+					world.renderer,
+					world.camera,
+					world.cameraControls
+				);
+				break;
+			case "bar":
+				plot = new Bar(
+					world.scene,
+					world.renderer,
+					world.camera,
+					world.cameraControls
+				);
+			break;
 		
-		world.addObject(scatterPlot)
+			default:
+				break;
+		}
+		
+		plot.setupData(dataConfig)
+		plot.init(dataConfig.position[0], dataConfig.position[1], dataConfig.position[2]);
+		
+		world.addObject(plot)
 		if ( index == 0)
-			world.cameraControls.fitToBox(scatterPlot.pointsGroup, true,{
+			world.cameraControls.fitToBox(plot.objectToFocus, true,{
                 paddingLeft: 2,
                 paddingRight: 2,
                 paddingTop: 2,

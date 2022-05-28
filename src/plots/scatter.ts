@@ -73,7 +73,7 @@ export class ScatterPlot extends Plot {
 			this.labelColors[element] = this.colors[index]
 
 		}
-		const geometry = new SphereBufferGeometry(0.04, 8, 8);
+		const geometry = new SphereBufferGeometry(0.04, 5, 5);
 
 		//this.buildLegend();
 		for (let i = 0; i < this.dataObj.length; i++) {
@@ -163,7 +163,7 @@ export class ScatterPlot extends Plot {
 
 		const sphere = new SphereGeometry( 0.1, 16, 8 );
 		let light1 = new PointLight( 0xffffff, 0.5, 200 );
-		light1.add( new Mesh( sphere, new MeshBasicMaterial( { color: 0xffffff } ) ) );
+		//light1.add( new Mesh( sphere, new MeshBasicMaterial( { color: 0xffffff } ) ) );
 		light1.position.set(boxPos.x + x/2, groupV.y*2 , boxPos.z * 2.5 )
 		this.scene.add(light1)
 

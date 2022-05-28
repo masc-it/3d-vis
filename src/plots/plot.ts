@@ -6,6 +6,7 @@ import {
 } from "three";
 
 import CameraControls from "camera-controls";
+import { DataConfig } from "../utils/dataconfig";
 
 export abstract class Plot {
     scene: Scene;
@@ -25,6 +26,6 @@ export abstract class Plot {
 	}
 
     init: (x: number, y: number, z: number) => void
-    setupData : (dataJson : {[k:string]: any}) => void
+    setupData : (dataConfig : DataConfig) => void
 	render : () => void
 }
