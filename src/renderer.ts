@@ -32,19 +32,32 @@ import "bootstrap/dist/css/bootstrap.min.css";
 
 import * as scene from "./scene";
 import * as scatter from "./plots/scatter";
+import { getFiles, readJSONFile } from "./utils/files";
+import { DataConfig } from "./utils/dataconfig";
 
 function renderWorld() {
 	let world = new scene.World();
 
-	let scatterPlot = new scatter.ScatterPlot(
-		world.scene,
-		world.renderer,
-		world.camera,
-		world.cameraControls
-	);
-	scatterPlot.init();
-    
-    world.addObject(scatterPlot)
+	let configs = getFiles("./configs/", ".json")
+
+	let x = 0
+	configs.forEach(config => {
+
+		console.log(config)
+
+		let scatterPlot = new scatter.ScatterPlot(
+			world.scene,
+			world.renderer,
+			world.camera,
+			world.cameraControls
+		);
+		scatterPlot.setupData(new DataConfig(readJSONFile(config)))
+		scatterPlot.init(x,0,5);
+
+		world.addObject(scatterPlot)
+		x += 40
+	});
+	
 
 
 	function anim() {

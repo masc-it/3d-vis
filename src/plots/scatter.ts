@@ -1,14 +1,7 @@
-let configJson = window.fs.readFileSync("conf.json", "utf-8");
-let conf = JSON.parse(configJson);
-
-let rawdata = window.fs.readFileSync(conf["data_json"], "utf-8");
-
-let data = JSON.parse(rawdata);
-
-let dataObj = data["data"];
-
 import { Modal } from "bootstrap";
 import {
+	Box3,
+	BoxBufferGeometry,
 	Color,
 	Group,
 	Mesh,
@@ -16,6 +9,7 @@ import {
 	Raycaster,
 	SphereBufferGeometry,
 	Vector2,
+	Vector3,
 } from "three";
 
 
@@ -25,6 +19,10 @@ import { SelectionHelper } from "three/examples/jsm/interactive/SelectionHelper.
 import { Plot } from "./plot";
 import { createColors, CustomElement, shuffle } from "./utils";
 import { Bar } from "./bar";
+import { DataConfig } from "../utils/dataconfig";
+import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry";
+import typefaceFont from "three/examples/fonts/helvetiker_regular.typeface.json";
+import { FontLoader } from "three/examples/jsm/loaders/FontLoader";
 
 export class ScatterPlot extends Plot {
 	raycaster: Raycaster;
@@ -54,15 +52,15 @@ export class ScatterPlot extends Plot {
 
 	barChart : Bar
 
-	init = () => {
+	init = (x: number, y: number, z: number) => {
 
 		let hist: { [k: number]: number } = {};
 
-		this.colors = createColors(data["num_labels"])
+		this.colors = createColors(this.dataInfo["num_labels"])
 		this.colors = shuffle(this.colors)
 
-		for (let index = 0; index < data["labels"].length; index++) {
-			const element = data["labels"][index];
+		for (let index = 0; index < this.dataInfo["labels"].length; index++) {
+			const element = this.dataInfo["labels"][index];
 
 			this.camera.layers.enable(element + 2);
 			hist[element] = 0;
@@ -71,9 +69,9 @@ export class ScatterPlot extends Plot {
 		}
 		const geometry = new SphereBufferGeometry(0.04, 4, 4);
 
-		this.buildLegend();
-		for (let i = 0; i < dataObj.length; i++) {
-			let point = dataObj[i];
+		//this.buildLegend();
+		for (let i = 0; i < this.dataObj.length; i++) {
+			let point = this.dataObj[i];
 			const object = new Mesh(
 				geometry,
 				new MeshLambertMaterial({
@@ -94,7 +92,7 @@ export class ScatterPlot extends Plot {
 				object.scale.z *= 0.5;
 			}
 
-			object.name = "#cube-" + i;
+			object.name = "#cube-"+ this.name + "-" + i;
 			object.userData = {
 				img_name: point["img_name"],
 				layer: point["label"] + 2,
@@ -103,11 +101,56 @@ export class ScatterPlot extends Plot {
 			object.layers.set(point["label"] + 2);
 			this.pointsGroup.add(object);
 		}
-		this.pointsGroup.name = "#cube-container";
+		this.pointsGroup.name = "#cube-" + this.name + "-" + "container";
 		this.pointsGroup.layers.enableAll();
-		this.pointsGroup.position.set(0, 0, 5);
+		this.pointsGroup.position.set(x, y, z); // 0 0 5
 
+		//this.pointsGroup.add(tMesh)
 		this.scene.add(this.pointsGroup);
+
+		let groupV = new Vector3()
+		new Box3().setFromObject(this.pointsGroup).getCenter(groupV)
+
+		// covering box
+		let v = new Vector3()
+		let b = new Box3().setFromObject(this.pointsGroup)
+		b.getSize(v)
+
+		let scatterWidth = v.x
+		let scatterHeight = v.y
+
+		const boxGeometry = new BoxBufferGeometry(scatterWidth*1.2, scatterHeight*1.2, 0.1);
+		let boxObject = new Mesh(
+			boxGeometry,
+			new MeshLambertMaterial({
+				color: 0x000000,
+			})
+		);
+		
+		boxObject.position.set(groupV.x, 0, groupV.z / 1.5)
+		boxObject.translateY(scatterHeight)
+		this.scene.add(boxObject)
+		
+		this.scene.updateMatrixWorld(true);
+		// title
+		// scatter name
+		const fontt = new FontLoader().parse(typefaceFont);
+		
+		const tGeo = new TextGeometry(this.name, {
+			font: fontt,
+			size: 0.8,
+			height: 0.5,
+			
+		});
+
+		var boxPos = new Vector3();
+		boxPos.setFromMatrixPosition( boxObject.matrixWorld );
+		boxPos.multiplyScalar(0.5)
+		const tMat = new MeshLambertMaterial({ color: 0xffffff });
+		var tMesh = new Mesh(tGeo, tMat);
+
+		tMesh.position.set(boxPos.x + x/2, groupV.y * 1.4, groupV.z / 1.45);
+		this.scene.add(tMesh)
 
 		this.raycaster = new Raycaster();
 		this.raycaster.layers.enableAll();
@@ -125,10 +168,22 @@ export class ScatterPlot extends Plot {
 
 		const barData = {
 			"hist" : hist,
-			"labels": data["labels"],
+			"labels": this.dataInfo["labels"],
 			"colors": this.labelColors
 		}
-		this.barChart = new Bar(this.scene, this.renderer, this.camera, this.controls, barData)
+		//this.barChart = new Bar(this.scene, this.renderer, this.camera, this.controls, barData)
+		
+	}
+
+	setupData = (dataConfig: DataConfig) => {
+
+		this.dataConfig = dataConfig
+		let rawdata = window.fs.readFileSync(dataConfig.dataJson, "utf-8");
+		let data = JSON.parse(rawdata);
+
+		this.name = dataConfig.name
+		this.dataInfo = data
+		this.dataObj = data["data"];
 		
 	}
 
@@ -210,7 +265,7 @@ export class ScatterPlot extends Plot {
 	}
 	
 	private buildLegend = () => {
-		let labels = data["labels"];
+		let labels = this.dataInfo["labels"];
 	
 		var container = document.createElement("div");
 	
@@ -335,7 +390,7 @@ export class ScatterPlot extends Plot {
 		imgNames.forEach(element => {
 			
 			let b64 = window.fs.readFileSync(
-				conf["dataset_path"] + element,
+				this.dataConfig.datasetPath + element,
 				{ encoding: "base64" }
 			);
 			let img = document.createElement("img");
@@ -453,7 +508,7 @@ export class ScatterPlot extends Plot {
 	
 		if (this.imgs[obj.name] == undefined) {
 			let b64 = window.fs.readFileSync(
-				conf["dataset_path"] + obj.userData["img_name"],
+				this.dataConfig.datasetPath + obj.userData["img_name"],
 				{ encoding: "base64" }
 			);
 			console.log("first time");
@@ -477,10 +532,10 @@ export class ScatterPlot extends Plot {
 		openBtn.textContent = "open";
 		openBtn.type = "button";
 		openBtn.classList.add("preview");
-		openBtn.onclick = function (e: any) {
+		openBtn.onclick = (e: any) => {
 			e.preventDefault();
 			window.shell.showItemInFolder(
-				conf["dataset_path"] + obj.userData["img_name"]
+				this.dataConfig.datasetPath + obj.userData["img_name"]
 			);
 			return false;
 		};
@@ -514,4 +569,8 @@ export class ScatterPlot extends Plot {
 			}
 		}
 	}
+	dataObj: any[];
+	dataConfig: DataConfig;
+	dataInfo: any;
+	name: string;
 }

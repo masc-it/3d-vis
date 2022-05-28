@@ -21,6 +21,7 @@ export abstract class Plot {
         this.controls = controls
 	}
 
-    init: () => void
+    init: (x: number, y: number, z: number) => void
+    setupData : (dataJson : {[k:string]: any}) => void
 	render : () => void
 }
