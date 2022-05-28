@@ -127,7 +127,7 @@ export class ScatterPlot extends Plot {
 			})
 		);
 		
-		boxObject.position.set(groupV.x, 0, groupV.z / 1.5)
+		boxObject.position.set(groupV.x, y, groupV.z / 1.3)
 		boxObject.translateY(scatterHeight)
 		this.scene.add(boxObject)
 		
@@ -149,7 +149,7 @@ export class ScatterPlot extends Plot {
 		const tMat = new MeshLambertMaterial({ color: 0xffffff });
 		var tMesh = new Mesh(tGeo, tMat);
 
-		tMesh.position.set(boxPos.x + x/2, groupV.y * 1.4, groupV.z / 1.45);
+		tMesh.position.set(boxPos.x + x/2, boxPos.y + y/2 , boxPos.z * 2 );
 		this.scene.add(tMesh)
 
 		this.raycaster = new Raycaster();
