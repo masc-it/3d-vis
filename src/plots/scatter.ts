@@ -8,6 +8,7 @@ import {
 	MeshBasicMaterial,
 	MeshLambertMaterial,
 	MeshStandardMaterial,
+	Object3D,
 	PointLight,
 	Raycaster,
 	SphereBufferGeometry,
@@ -43,13 +44,12 @@ export class ScatterPlot extends Plot {
 
 	imgs: { [string: string]: string } = {};
 
-	selectionMode = false;
-	selectionBox: SelectionBox;
-	selectionHelper: SelectionHelper;
-
 	imageGridModal: Modal;
 
-	pointsGroup = new Group()
+	selectionMode = false
+
+	pointsGroup : Group
+	plotGroup : Group
 
 	isMouseDown = false;
 	mouseClick = false;
@@ -57,8 +57,20 @@ export class ScatterPlot extends Plot {
 	labelColors : { [k: number]: Color } = {};
 
 	barChart : Bar
+	pointsGroupCenter : Vector3
+
+	plotHasFocus = true
 
 	init = (x: number, y: number, z: number) => {
+
+		this.x = x
+		this.y = y
+		this.z = z
+
+		this.plotGroup = new Group()
+		//this.plotGroup.layers.enableAll();
+		this.pointsGroup = new Group()
+		//this.pointsGroup.layers.enableAll();
 
 		let hist: { [k: number]: number } = {};
 
@@ -68,7 +80,7 @@ export class ScatterPlot extends Plot {
 		for (let index = 0; index < this.dataInfo["labels"].length; index++) {
 			const element = this.dataInfo["labels"][index];
 
-			this.camera.layers.enable(element + 2);
+			//this.camera.layers.enable(element + 2);
 			hist[element] = 0;
 			this.labelColors[element] = this.colors[index]
 
@@ -99,24 +111,21 @@ export class ScatterPlot extends Plot {
 			object.name = "#cube-"+ this.name + "-" + i;
 			object.userData = {
 				img_name: point["img_name"],
-				layer: point["label"] + 2,
+				layer: point["label"] ,
 			};
 
 			//object.castShadow = true
-			object.layers.set(point["label"] + 2);
+			//object.layers.set(point["label"] + 2);
 			this.pointsGroup.add(object);
 		}
 		//this.pointsGroup.castShadow = true
 		this.pointsGroup.name = "#cube-" + this.name + "-" + "container";
-		this.pointsGroup.layers.enableAll();
+		this.plotGroup.name = "#cube-" + this.name + "-" + "container";
 		this.pointsGroup.position.set(x, y, z); // 0 0 5
 
-		//this.pointsGroup.add(tMesh)
-		this.objectToFocus = this.pointsGroup
-		this.scene.add(this.pointsGroup);
-
-		let groupV = new Vector3()
-		new Box3().setFromObject(this.pointsGroup).getCenter(groupV)
+		this.scene.updateMatrixWorld()
+		this.pointsGroupCenter = new Vector3()
+		new Box3().setFromObject(this.pointsGroup).getCenter(this.pointsGroupCenter)
 
 		// covering box
 		let v = new Vector3()
@@ -126,21 +135,29 @@ export class ScatterPlot extends Plot {
 		let scatterWidth = v.x
 		let scatterHeight = v.y
 
-		const boxGeometry = new BoxBufferGeometry(scatterWidth*1.2, scatterHeight*1.2, 0.1);
-		let boxObject = new Mesh(
+		this.pointsGroup.translateY(-scatterHeight)
+		this.objectToFocus = this.pointsGroup
+		this.scene.add(this.pointsGroup);
+
+		this.pointsGroupCenter = new Vector3()
+		new Box3().setFromObject(this.pointsGroup).getCenter(this.pointsGroupCenter)
+		
+		//const boxGeometry = new BoxBufferGeometry(scatterWidth*1.2, scatterHeight*1.2, 0.1);
+		const boxGeometry = new BoxBufferGeometry(1, 1, 0.1);
+		this.boxObject = new Mesh(
 			boxGeometry,
 			new MeshLambertMaterial({
 				color: 0x000000,
 			})
 		);
 		
-		boxObject.position.set(groupV.x, y, groupV.z / 1.3)
-		boxObject.translateY(scatterHeight)
-		boxObject.receiveShadow = true
+		boxGeometry.scale(scatterWidth*1.2, scatterHeight*1.2, 1)
+
+		this.boxObject.position.set(this.pointsGroupCenter.x, y, this.pointsGroupCenter.z /2 + z/2 )
+		//boxObject.translateY(scatterHeight)
 		
-		this.scene.add(boxObject)
+		this.plotGroup.add(this.boxObject)
 		
-		this.scene.updateMatrixWorld(true);
 		// title
 		// scatter name
 		const fontt = new FontLoader().parse(typefaceFont);
@@ -152,24 +169,29 @@ export class ScatterPlot extends Plot {
 			
 		});
 
-		var boxPos = new Vector3();
-		boxPos.setFromMatrixPosition( boxObject.matrixWorld );
-		boxPos.multiplyScalar(0.5)
+		this.scene.updateMatrixWorld()
+		
+		let boxC = new Vector3()
+		this.boxObject.getWorldPosition(boxC)
+
 		const tMat = new MeshLambertMaterial({ color: 0xffffff });
 		var tMesh = new Mesh(tGeo, tMat);
+		tMesh.position.set(this.pointsGroupCenter.x/2 + x/2, this.pointsGroupCenter.y/2 + this.y/2 , this.pointsGroupCenter.z /2 +z/2 );
+		//tMesh.position.set(this.pointsGroupCenter.x/2 + x/2, boxC.y + h/2 , boxC.z  );
+		this.plotGroup.add(tMesh)
 
-		tMesh.position.set(boxPos.x + x/2, boxPos.y + y/2 , boxPos.z * 2 );
-		this.scene.add(tMesh)
-
-		const sphere = new SphereGeometry( 0.1, 16, 8 );
+		//const sphere = new SphereGeometry( 0.1, 16, 8 );
 		let light1 = new PointLight( 0xffffff, 0.5, 200 );
 		//light1.add( new Mesh( sphere, new MeshBasicMaterial( { color: 0xffffff } ) ) );
-		light1.position.set(boxPos.x + x/2, groupV.y*2 , boxPos.z * 2.5 )
-		this.scene.add(light1)
+		light1.position.set(this.pointsGroupCenter.x/2 + x/2, this.pointsGroupCenter.y*2 , this.pointsGroupCenter.z * 2.5 )
+		this.plotGroup.add(light1)
+		
+		this.scene.add(this.plotGroup)
 
-
+		this.build3DLegend()
+		this.buildSelectionMenu()
 		this.raycaster = new Raycaster();
-		this.raycaster.layers.enableAll();
+		//this.raycaster.layers.enableAll();
 
 		this.selectionListeners();
 
@@ -178,19 +200,25 @@ export class ScatterPlot extends Plot {
 		document.addEventListener("mouseup", this.onMouseUp);
 		document.addEventListener("click", this.onMouseClick);
 
-		this.createMenu();
+		//this.createMenu();
 
 		this.imageGridModal = new Modal(document.getElementById("pics-modal"), {});
 
-		const barData = {
+		/* const barData = {
 			"hist" : hist,
 			"labels": this.dataInfo["labels"],
 			"colors": this.labelColors
-		}
+		} */
 		//this.barChart = new Bar(this.scene, this.renderer, this.camera, this.controls, barData)
 		
 	}
 
+	resetState = () => {
+		this.selectionMode = false
+		this.plotHasFocus = false
+		this.plotIsRendered = false
+		this.controls.enabled = true
+	}
 	setupData = (dataConfig: DataConfig) => {
 
 		this.dataConfig = dataConfig
@@ -203,8 +231,167 @@ export class ScatterPlot extends Plot {
 		
 	}
 
+	build3DLegend = () => {
+
+		this.legendRaycaster = new Raycaster();
+		this.scene.updateMatrixWorld()
+		
+		this.legendGroup = new Group()
+		this.legendMap = {}
+		let bbox = new Box3().setFromObject(this.boxObject)
+
+		let w = bbox.max.x - bbox.min.x
+		let h = bbox.max.y - bbox.min.y
+
+		let boxC = new Vector3()
+
+		this.boxObject.getWorldPosition(boxC)
+
+
+		const boxGeometry = new BoxBufferGeometry(0.3, 0.3, 0.3);
+		
+		let startY = boxC.y + h/2 - 0.6
+		
+		for (let index = 0; index < this.dataInfo["labels"].length; index++) {
+			const element = this.dataInfo["labels"][index];
+			let boxObject = new Mesh(
+				boxGeometry,
+				new MeshLambertMaterial({
+					color: element != -1 ? this.labelColors[element] : 0xcacaca,
+				})
+			);
+			boxObject.position.set(boxC.x - w/2 + 0.6, startY, this.pointsGroupCenter.z /2 + this.z/2 )
+			boxObject.name = "#legend_" + element
+			boxObject.userData = {
+				"label": element
+			}
+			this.legendMap[element] = true
+			this.legendGroup.add(boxObject)
+			
+			startY -= 0.4
+
+		}
+
+		this.scene.add(this.legendGroup)
+	}
+
+
+
+	buildSelectionMenu = () => {
+		this.scene.updateMatrixWorld()
+		
+		let bbox = new Box3().setFromObject(this.boxObject)
+
+		let w = bbox.max.x - bbox.min.x
+		let h = bbox.max.y - bbox.min.y
+
+		let boxC = new Vector3()
+
+		this.boxObject.getWorldPosition(boxC)
+
+		const boxGeometry = new BoxBufferGeometry(0.3, 0.3, 0.3);
+		
+		let startY = boxC.y - h/2 + 0.6
+		
+		this.selectionBox = new Mesh(
+			boxGeometry,
+			new MeshLambertMaterial({
+				color: 0xFF0000,
+			})
+		);
+		this.selectionBox.position.set(boxC.x - w/2 + 0.6, startY, this.pointsGroupCenter.z /2 + this.z/2 + 0.1 )
+		this.selectionBox.name = "#selection_" + this.name
+		this.selectionBox.userData = {
+			"name": this.name
+		}
+		
+		this.scene.add(this.selectionBox)
+		this.selectionRaycaster = new Raycaster();
+
+		
+	}
+
+
 	render = () => {
 		
+		this.raycastPopup()
+	}
+
+	private getGroupElementsByLayer = (group: Group, layer: number) => {
+		
+		let children = group.children
+		return children.filter(e => e.userData["layer"] == layer)
+
+	}
+
+	private toggleElements = (elements : Object3D[]) => {
+		
+		elements.forEach(e => e.visible = !e.visible)
+	}
+
+	
+
+	private legendSelection = () => {
+		this.legendRaycaster.setFromCamera(this.pointer, this.camera);
+	
+		const intersects = this.legendRaycaster.intersectObjects(this.legendGroup.children, false);
+	
+		if (intersects.length > 0) {
+			
+			let el = intersects[0].object
+			
+			let label = el.userData["label"]
+			console.log(label)
+			let currValue = this.legendMap[label]
+
+			this.legendMap[label] = !this.legendMap[label]
+
+			let objects = this.getGroupElementsByLayer(this.pointsGroup, label)
+			
+			this.toggleElements(objects)
+
+			/* if (currValue == true){
+				
+				this.selectionBox.material.color = new Color(0x00ff00)
+				this.selectionBox.position.z -= 0.1
+				
+			} else {
+				this.selectionBox.material.color = new Color(0xff0000)
+				this.selectionBox.position.z += 0.1
+			} */
+
+			this.requestWorldUpdate = true
+		}
+		
+	}
+
+	private raycastSelectionBtn = () => {
+		this.selectionRaycaster.setFromCamera(this.pointer, this.camera);
+	
+		const intersects = this.selectionRaycaster.intersectObject(this.selectionBox, true);
+	
+		if (intersects.length > 0) {
+			this.selectionMode = !this.selectionMode
+			console.log(this.selectionMode)
+			this.controls.enabled = !this.selectionMode
+
+			if (this.selectionMode){
+				this.world.createSelectionUtils()
+
+				this.selectionBox.material.color = new Color(0x00ff00)
+				this.selectionBox.position.z -= 0.1
+			} else {
+				this.selectionBox.material.color = new Color(0xff0000)
+				this.selectionBox.position.z += 0.1
+			}
+
+			this.requestWorldUpdate = true
+		}
+		
+	}
+	private raycastPopup = () => {
+
+		if (!this.plotHasFocus) return
 		this.raycaster.setFromCamera(this.pointer, this.camera);
 	
 		const intersects = this.raycaster.intersectObjects(this.pointsGroup.children, false);
@@ -212,110 +399,49 @@ export class ScatterPlot extends Plot {
 		try {
 			if (intersects.length > 0) {
 				
-				//console.log(intersects[0].object)
 				if (this.INTERSECTED != intersects[0].object) {
-					/* if (INTERSECTED)
-						INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex); */
-					if (intersects[0].object.name.startsWith("#cube")) {
+					
+					let obj = intersects[0].object
+					let layer = obj.userData["layer"]
+					let isEnabled = this.legendMap[layer]
+					if (obj.name.startsWith("#cube") && isEnabled ) {
 						//console.log("intersected")
-						this.INTERSECTED = intersects[0].object;
-						/* INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
-						INTERSECTED.material.emissive.setHex(0xff0000); */
+						this.INTERSECTED = obj
+						
 					}
 				}
 			} else {
 				this.INTERSECTED = undefined;
-				/* //console.log("nop")
-				if (INTERSECTED) {
-					INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
-				}
-	
-				INTERSECTED = undefined; */
+
 			}
 		} catch (error) {}
-		//_renderer.render(_scene, _camera);
-	}
-
-	private _buildCheckbox = (name: string, id: string) => {
-		var checkbox = document.createElement("input");
-		checkbox.type = "checkbox";
-		checkbox.id = id;
-		checkbox.value = name;
-		checkbox.setAttribute("checked", "true");
-	
-		let idNum = parseInt(id.split("_")[1]);
-		
-		let checkboxCustom = new CustomElement(checkbox)
-		checkboxCustom.subscribe("checked", (e) => {
-			this.renderer.render(this.scene, this.camera)
-		})
-
-		checkbox.onchange = (e: any) => {
-			let layerId = parseInt(id.split("_")[1]) + 2;
-			if (e.currentTarget.checked) {
-				this.camera.layers.enable(layerId);
-				this.raycaster.layers.enable(layerId);
-			} else {
-				this.camera.layers.disable(layerId);
-				this.raycaster.layers.disable(layerId);
-			}
-			checkboxCustom.notify("checked")
-		};
-		var label = document.createElement("label");
-		label.htmlFor = id;
-		let t = document.createElement("span");
-		t.textContent = name;
-	
-		if (idNum >= 0) {
-			t.style.color = "#" + this.labelColors[idNum].getHexString();
-		} else {
-			t.style.color = "#cacaca";
-		}
-	
-		label.appendChild(t);
-	
-		var container = document.createElement("div");
-		container.appendChild(checkbox);
-		container.appendChild(label);
-		return container;
-	}
-	
-	private buildLegend = () => {
-		let labels = this.dataInfo["labels"];
-	
-		var container = document.createElement("div");
-	
-		container.style.position = "absolute";
-		container.style.backgroundColor = "whitesmoke";
-		container.style.top = "10px";
-		container.style.left = "10px";
-		for (let index = 0; index < labels.length; index++) {
-			const element = labels[index];
-	
-			container.appendChild(
-				this._buildCheckbox("Class " + element, "layer_" + element)
-			);
-		}
-	
-		let m = document.getElementById("main");
-		if (m) m.appendChild(container);
 	}
 
 	private selectionListeners = () => {
 		
 		document.addEventListener("pointerdown", (event:any) => {
-			if (event.target.classList.contains("interactive")) return
+			
+			if (!this.plotIsRendered) return
+			if (event.target.classList.contains("close")){
+				this.imageGridModal.hide()
+				this.plotHasFocus = true
+				return
+			}
+
+			if (event.target.classList.contains("interactive")){
+				return
+			}
 			if ( !this.selectionMode) return
-			for (const item of this.selectionBox.collection) {
+			for (const item of this.world.selectionBox.collection) {
 				let i : any = item
 				if (!i.name.startsWith("#cube")) continue
-				if (!this.camera.layers.isEnabled(i.userData["layer"])) continue
+				if (!this.legendMap[i.userData["layer"]]) continue
 
 				i.material.emissive.set(0x000000);
 				
 			}
 	
-			this.selectionBox.startPoint.set(
+			this.world.selectionBox.startPoint.set(
 				(event.clientX / window.innerWidth) * 2 - 1,
 				-(event.clientY / window.innerHeight) * 2 + 1,
 				0.5
@@ -324,32 +450,34 @@ export class ScatterPlot extends Plot {
 		});
 	
 		document.addEventListener("pointermove",  (event:any) => {
-	
+			
+			if (!this.plotIsRendered) return
 			if (event.target.classList.contains("interactive")) return
 			if ( !this.selectionMode) return
-			if (this.selectionHelper.isDown) {
-				for (let i = 0; i < this.selectionBox.collection.length; i++) {
+			if (!this.plotHasFocus) return
+			if (this.world.selectionHelper.isDown) {
+				for (let i = 0; i < this.world.selectionBox.collection.length; i++) {
 	
-					let el = this.selectionBox.collection[i]
+					let el = this.world.selectionBox.collection[i]
 					if (!el.name.startsWith("#cube")) continue
-					if (!this.camera.layers.isEnabled(el.userData["layer"])) continue
+					if (!this.legendMap[el.userData["layer"]]) continue
 					let mat : any = el.material
 					mat.emissive.set(0x000000);
 					this.requestWorldUpdate = true
 				}
 				
-				this.selectionBox.endPoint.set(
+				this.world.selectionBox.endPoint.set(
 					(event.clientX / window.innerWidth) * 2 - 1,
 					-(event.clientY / window.innerHeight) * 2 + 1,
 					0.5
 				);
 				
-				const allSelected = this.selectionBox.select();
+				const allSelected = this.world.selectionBox.select();
 	
 				for (let i = 0; i < allSelected.length; i++) {
 					let el = allSelected[i]
 					if (!el.name.startsWith("#cube")) continue
-					if (!this.camera.layers.isEnabled(el.userData["layer"])) continue
+					if (!this.legendMap[el.userData["layer"]]) continue
 					let mat : any = el.material
 					mat.emissive.set(0xffffff);
 					this.requestWorldUpdate = true
@@ -359,27 +487,26 @@ export class ScatterPlot extends Plot {
 		});
 	
 		document.addEventListener("pointerup", (event:any) => {
-	
-			if (this.selectionBox == undefined || this.selectionBox.collection.length == 0) return
+			
+			if (!this.plotIsRendered) return
+			if (this.world.selectionBox == undefined || this.world.selectionBox.collection.length == 0) return
 			if (event.target.classList.contains("interactive")) return
 			if ( !this.selectionMode) return
-			this.selectionBox.endPoint.set(
+			this.world.selectionBox.endPoint.set(
 				(event.clientX / window.innerWidth) * 2 - 1,
 				-(event.clientY / window.innerHeight) * 2 + 1,
 				0.5
 			);
 	
-			const allSelected = this.selectionBox.select();
+			const allSelected = this.world.selectionBox.select();
 			
 			//console.log( "camera: "+  this.camera.layers.mask.toString(2))
 			let imgNames : string[] = []
 			for (let i = 0; i < allSelected.length; i++) {
 				let el = allSelected[i]
 				if (!el.name.startsWith("#cube")) continue
-				
-				if (!this.camera.layers.isEnabled(el.userData["layer"])){ 
-					continue
-				}
+				if (!this.legendMap[el.userData["layer"]]) continue
+
 				imgNames.push(el.userData["img_name"])
 				let mat : any = el.material
 				mat.emissive.set(0x000000);
@@ -391,9 +518,6 @@ export class ScatterPlot extends Plot {
 			if (imgNames.length > 0)
 				this.buildImageGrid(imgNames)
 			imgNames = []
-			this.selectionBox = new SelectionBox(this.camera, this.scene);
-			this.selectionHelper = new SelectionHelper(this.selectionBox, this.renderer, "selectBox");
-	
 	
 		});
 	}
@@ -417,7 +541,8 @@ export class ScatterPlot extends Plot {
 			
 			container.appendChild(img);
 		});
-	
+		
+		this.plotHasFocus = false
 		this.imageGridModal.toggle()
 		
 	}
@@ -449,30 +574,9 @@ export class ScatterPlot extends Plot {
 			this.controls.fitToBox(this.pointsGroup, true)
 		}
 	
-		let selectMode = document.createElement("button")
-		selectMode.type = "button"
-		selectMode.textContent = "Select mode (OFF)"
-		selectMode.classList.add("btn", "btn-outline-dark")
 
-		let custom_selectMode = new CustomElement(selectMode)
-		custom_selectMode.subscribe("change", (e) => {
-
-			e.target.textContent = this.selectionMode ? "Select mode (ON)" : "Select mode (OFF)"
-
-		})
-
-		selectMode.onclick = () => {
-
-			this.selectionMode = !this.selectionMode
-			this.controls.enabled = !this.controls.enabled
-			this.selectionBox = new SelectionBox(this.camera, this.scene);
-			this.selectionHelper = new SelectionHelper(this.selectionBox, this.renderer, "selectBox");
-			custom_selectMode.notify("change")
-		}
-		
 		container.appendChild(findCluster)
 		container.appendChild(toHistogram)
-		container.appendChild(selectMode)
 	
 		let m = document.getElementById("main");
 		if (m) m.appendChild(container)
@@ -484,6 +588,12 @@ export class ScatterPlot extends Plot {
 	}
 
 	private onMouseClick = (event: any) => {
+
+		if (!this.plotIsRendered) return
+
+		this.raycastSelectionBtn()
+		this.legendSelection()
+
 		if (this.mouseClick) {
 			if (!event.target.classList.contains("preview")) {
 				this.mouseClick = false;
@@ -569,6 +679,9 @@ export class ScatterPlot extends Plot {
 	}
 	
 	onPointerMove = (event: any) => {
+
+		if (!this.plotIsRendered) return
+		
 		if (this.isMouseDown || this.mouseClick) return;
 		this.pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
 		this.pointer.y = -((event.clientY - 0) / window.innerHeight) * 2 + 1; // -40px due to navbar
@@ -590,4 +703,11 @@ export class ScatterPlot extends Plot {
 	dataConfig: DataConfig;
 	dataInfo: any;
 	name: string;
+	boxObject: Mesh<BoxBufferGeometry, MeshLambertMaterial>;
+	selectionBox: Mesh<BoxBufferGeometry, MeshLambertMaterial>;
+	selectionRaycaster: Raycaster;
+	plotIsRendered: boolean;
+	legendRaycaster: Raycaster;
+	legendGroup: Group;
+	legendMap: {[k:string]:boolean}
 }

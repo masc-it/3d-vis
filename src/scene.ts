@@ -1,6 +1,9 @@
 import * as THREE from "three";
 import CameraControls from "camera-controls";
 import { Plot } from "./plots/plot";
+import { CustomElement } from "./plots/utils";
+import { SelectionBox } from "three/examples/jsm/interactive/SelectionBox";
+import { SelectionHelper } from "three/examples/jsm/interactive/SelectionHelper";
 
 CameraControls.install( { THREE: THREE } );
 
@@ -21,7 +24,10 @@ export class World {
 
     objects : Plot[] = []
 
-    currentObjIndex = 0
+    currentObjIndex = -1
+
+    selectionBox: SelectionBox;
+    selectionHelper: SelectionHelper;
 
     constructor() {
         this.init()
@@ -77,7 +83,9 @@ export class World {
         this.scene.background = new THREE.Color(0xf0f0f0);
 		const light = new THREE.AmbientLight(0xffffff, 0.5);
 		this.scene.add(light);
-    
+        
+        this.createSelectionUtils()
+
         this.renderer.render( this.scene, this.camera );
     
         this.createSettings()
@@ -86,19 +94,30 @@ export class World {
         this.onButtonPressed()
     }
 
+    createSelectionUtils = () => {
+        this.selectionBox = new SelectionBox(this.camera, this.scene);
+		this.selectionHelper = new SelectionHelper(this.selectionBox, this.renderer, "selectBox");
+    }
     private onButtonPressed() {
         document.addEventListener("keydown", (event:any) => {
             var name = event.key;
             
+            if (this.currentObjIndex > -1){
+                this.objects[this.currentObjIndex].resetState()
+            }
+                
             if (name == "ArrowRight"){
                 this.currentObjIndex += 1
                 
             } else if (name == "ArrowLeft") {
                 this.currentObjIndex -= 1
+            } else {
+                return
             }
 
             this.currentObjIndex = this.currentObjIndex % this.objects.length
-
+            this.objects[this.currentObjIndex].plotIsRendered = true
+            this.objects[this.currentObjIndex].plotHasFocus = true
             this.cameraControls.fitToBox(this.objects[this.currentObjIndex].objectToFocus, true, {
                 paddingLeft: 2,
                 paddingRight: 2,

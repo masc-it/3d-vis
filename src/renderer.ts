@@ -55,6 +55,7 @@ function renderWorld() {
 		switch (dataConfig.type) {
 			case "scatter":
 				plot = new scatter.ScatterPlot(
+					world,
 					world.scene,
 					world.renderer,
 					world.camera,
@@ -63,6 +64,7 @@ function renderWorld() {
 				break;
 			case "bar":
 				plot = new Bar(
+					world,
 					world.scene,
 					world.renderer,
 					world.camera,

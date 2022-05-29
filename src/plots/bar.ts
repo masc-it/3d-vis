@@ -95,4 +95,8 @@ export class Bar extends Plot {
     render = () => {
         
     }
+
+    resetState = () => {
+        
+    }
 }
