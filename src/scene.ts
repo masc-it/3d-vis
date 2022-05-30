@@ -4,6 +4,7 @@ import { Plot } from "./plots/plot";
 import { CustomElement } from "./plots/utils";
 import { SelectionBox } from "three/examples/jsm/interactive/SelectionBox";
 import { SelectionHelper } from "three/examples/jsm/interactive/SelectionHelper";
+import { CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer";
 
 CameraControls.install( { THREE: THREE } );
 
@@ -28,6 +29,7 @@ export class World {
 
     selectionBox: SelectionBox;
     selectionHelper: SelectionHelper;
+    labelRenderer: CSS2DRenderer;
 
     constructor() {
         this.init()
@@ -59,6 +61,7 @@ export class World {
 
     refresh = () => {
         this.renderer.render(this.scene, this.camera);
+
     }
 
     private init = () => {
@@ -69,6 +72,12 @@ export class World {
         this.camera = new THREE.OrthographicCamera( this.width / - 200, this.width / 200, this.height / 200, this.height / - 200, 1, 1000 );
         this.camera.position.set( 10, 20, 600 );
 
+        /* this.labelRenderer = new CSS2DRenderer();
+        this.labelRenderer.setSize( window.innerWidth, window.innerHeight );
+        this.labelRenderer.domElement.style.position = 'absolute';
+        this.labelRenderer.domElement.style.top = '0px';
+        document.body.appendChild( this.labelRenderer.domElement ); */
+
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.setSize( this.width, this.height );
@@ -77,6 +86,8 @@ export class World {
 		this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 		this.renderer.outputEncoding = THREE.sRGBEncoding;
         document.body.appendChild( this.renderer.domElement );
+
+        
     
         this.cameraControls = new CameraControls( this.camera, this.renderer.domElement );
 

@@ -22,6 +22,7 @@ import {
 
 import { SelectionBox } from "three/examples/jsm/interactive/SelectionBox.js";
 import { SelectionHelper } from "three/examples/jsm/interactive/SelectionHelper.js";
+import { CSS2DObject } from "three/examples/jsm/renderers/CSS2DRenderer";
 
 import { Plot } from "./plot";
 import { createColors, CustomElement, shuffle } from "./utils";
@@ -247,12 +248,47 @@ export class ScatterPlot extends Plot {
 
 		this.boxObject.getWorldPosition(boxC)
 
-
-		const boxGeometry = new BoxBufferGeometry(0.3, 0.3, 0.3);
+		const fontt = new FontLoader().parse(typefaceFont);
 		
+		const legendBtnText = "Legend"
+		const tGeo = new TextGeometry(legendBtnText, {
+			font: fontt,
+			size: 0.1,
+			height: 0.05,
+			
+		});
+
+		const boxGeometry = new BoxBufferGeometry(0.6, 0.3, 0.3);
+		
+		// get top left corner
 		let startY = boxC.y + h/2 - 0.6
+		let startX = boxC.x - w/2 + 0.6
+
+		let zPos = this.pointsGroupCenter.z /2 + this.z/2
+		let legendButton = new Mesh(
+			boxGeometry,
+			new MeshLambertMaterial({
+				color: 0xffffff,
+			})
+		);
+		
+		legendButton.position.set(startX, startY, zPos )
+		legendButton.name = "#legendbtn"
+
+		const tMat = new MeshLambertMaterial({ color: 0x000000 });
+		var tMesh = new Mesh(tGeo, tMat);
+		tMesh.position.set(startX - 0.034 * legendBtnText.length , startY - 0.05 , zPos + 0.11 );
+		this.legendGroup.add(tMesh)
+		
+		this.legendGroup.add(legendButton)
+		
+		this.scene.add(this.legendGroup)
 		
 		for (let index = 0; index < this.dataInfo["labels"].length; index++) {
+			const element = this.dataInfo["labels"][index];
+			this.legendMap[element] = true
+		}
+		/* for (let index = 0; index < this.dataInfo["labels"].length; index++) {
 			const element = this.dataInfo["labels"][index];
 			let boxObject = new Mesh(
 				boxGeometry,
@@ -269,10 +305,9 @@ export class ScatterPlot extends Plot {
 			this.legendGroup.add(boxObject)
 			
 			startY -= 0.4
+			this.scene.add(this.legendGroup)
+		} */
 
-		}
-
-		this.scene.add(this.legendGroup)
 	}
 
 
@@ -710,4 +745,6 @@ export class ScatterPlot extends Plot {
 	legendRaycaster: Raycaster;
 	legendGroup: Group;
 	legendMap: {[k:string]:boolean}
+	legendLabel: CSS2DObject;
+	legendDiv: HTMLDivElement;
 }
