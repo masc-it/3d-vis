@@ -560,17 +560,21 @@ export class ScatterPlot extends Plot {
 	private buildImageGrid = (imgNames: string[]) => {
 	
 		let container = document.getElementById("imgs-container");
-	
 		container.innerHTML = ""
-	
+		
 		imgNames.forEach(element => {
 			
-			let b64 = window.fs.readFileSync(
-				this.dataConfig.datasetPath + element,
-				{ encoding: "base64" }
-			);
+			let imgPath = window.path.join(this.dataConfig.datasetPath, element)
+			if (this.imgs[element] == undefined) {
+				let b64 = window.fs.readFileSync(
+					imgPath,
+					{ encoding: "base64" }
+				);
+				this.imgs[element] = b64
+			}
+
 			let img = document.createElement("img");
-			img.src = `data:image/jpg;base64,${b64}`;
+			img.src = `data:image/jpg;base64,${this.imgs[element]}`;
 			img.width = 400;
 			img.height = 400;
 			
@@ -678,13 +682,15 @@ export class ScatterPlot extends Plot {
 				if (d) d.remove();
 			} catch (error) {}
 		}
-	
+		let imgPath = window.path.join(this.dataConfig.datasetPath, obj.userData["img_name"])
+
 		if (this.imgs[obj.name] == undefined) {
+			
 			let b64 = window.fs.readFileSync(
-				this.dataConfig.datasetPath + obj.userData["img_name"],
+				imgPath,
 				{ encoding: "base64" }
 			);
-			console.log("first time");
+			//console.log("first time");
 			this.imgs[obj.name] = b64;
 		}
 	
@@ -708,7 +714,7 @@ export class ScatterPlot extends Plot {
 		openBtn.onclick = (e: any) => {
 			e.preventDefault();
 			window.shell.showItemInFolder(
-				this.dataConfig.datasetPath + obj.userData["img_name"]
+				imgPath
 			);
 			return false;
 		};
