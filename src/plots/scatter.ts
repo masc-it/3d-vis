@@ -204,7 +204,7 @@ export class ScatterPlot extends Plot {
 		//this.createMenu();
 
 		this.imageGridModal = new Modal(document.getElementById("pics-modal"), {});
-
+		this.legendModal = new Modal(document.getElementById("legend-modal"), {});
 		/* const barData = {
 			"hist" : hist,
 			"labels": this.dataInfo["labels"],
@@ -310,6 +310,68 @@ export class ScatterPlot extends Plot {
 
 	}
 
+	private _buildCheckbox = (name: string, id: string) => {
+		var checkbox = document.createElement("input");
+		checkbox.type = "checkbox";
+		checkbox.id = id;
+		checkbox.value = name;
+
+		let label = parseInt(id.split("_")[1]);
+
+		if (this.legendMap[label])
+			checkbox.setAttribute("checked", "true");
+	
+		let idNum = parseInt(id.split("_")[1]);
+		
+		checkbox.onchange = (e: any) => {
+			
+
+			this.legendMap[label] = !this.legendMap[label]
+
+			let objects = this.getGroupElementsByLayer(this.pointsGroup, label)
+			
+			this.toggleElements(objects)
+
+			this.requestWorldUpdate = true
+
+		};
+		var labelEl = document.createElement("label");
+		labelEl.htmlFor = id;
+		let t = document.createElement("span");
+		t.textContent = name;
+		t.style.marginLeft = "5px"
+	
+		if (idNum >= 0) {
+			t.style.color = "#" + this.labelColors[idNum].getHexString();
+		} else {
+			t.style.color = "#cacaca";
+		}
+	
+		labelEl.appendChild(t);
+	
+		var container = document.createElement("div");
+		container.appendChild(checkbox);
+		container.appendChild(labelEl);
+		return container;
+	}
+	
+	private buildLegend = () => {
+		let labels : any[] = this.dataInfo["labels"]
+	
+		var container = document.getElementById("legend-container");
+		container.innerHTML = ""
+		
+		for (let index = 0; index < labels.length; index++) {
+			const element = labels[index];
+	
+			container.appendChild(
+				this._buildCheckbox("Class " + element, "layer_" + element)
+			);
+		}
+		this.plotHasFocus = false
+		this.legendModal.toggle()
+	}
+
 
 
 	buildSelectionMenu = () => {
@@ -375,27 +437,7 @@ export class ScatterPlot extends Plot {
 			
 			let el = intersects[0].object
 			
-			let label = el.userData["label"]
-			console.log(label)
-			let currValue = this.legendMap[label]
-
-			this.legendMap[label] = !this.legendMap[label]
-
-			let objects = this.getGroupElementsByLayer(this.pointsGroup, label)
-			
-			this.toggleElements(objects)
-
-			/* if (currValue == true){
-				
-				this.selectionBox.material.color = new Color(0x00ff00)
-				this.selectionBox.position.z -= 0.1
-				
-			} else {
-				this.selectionBox.material.color = new Color(0xff0000)
-				this.selectionBox.position.z += 0.1
-			} */
-
-			this.requestWorldUpdate = true
+			this.buildLegend()
 		}
 		
 	}
@@ -459,6 +501,7 @@ export class ScatterPlot extends Plot {
 			if (!this.plotIsRendered) return
 			if (event.target.classList.contains("close")){
 				this.imageGridModal.hide()
+				this.legendModal.hide()
 				this.plotHasFocus = true
 				return
 			}
@@ -775,4 +818,5 @@ export class ScatterPlot extends Plot {
 	legendMap: {[k:string]:boolean}
 	legendLabel: CSS2DObject;
 	legendDiv: HTMLDivElement;
+	legendModal: Modal;
 }
