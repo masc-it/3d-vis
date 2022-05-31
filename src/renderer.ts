@@ -43,7 +43,6 @@ function renderWorld() {
 	let configs = getFiles("./configs/", ".json")
 
 	let x = 0
-	let y = 0
 
 	for (let index = 0; index < configs.length; index++) {
 		const config = configs[index];
@@ -75,45 +74,29 @@ function renderWorld() {
 			default:
 				break;
 		}
-		
+		if (plot == undefined){
+			console.log(`Invalid config file: ${config}`)
+			continue
+		}
 		plot.setupData(dataConfig)
 		plot.init(dataConfig.position[0], dataConfig.position[1], dataConfig.position[2]);
 		
 		world.addObject(plot)
-		if ( index == 0)
-			world.cameraControls.fitToBox(plot.objectToFocus, true,{
-                paddingLeft: 2,
-                paddingRight: 2,
-                paddingTop: 2,
-                paddingBottom: 2
-            })
-
+			
 		x += 40
 		//y += 5
 	}
 
-	
-	
-
+	world.focusOnObject(world.objects[0])
+	world.currentObjIndex = 0
 
 	function anim() {
 		const delta = world.clock.getDelta();
 		const updated = world.cameraControls.update(delta);
 
-		// if ( elapsed > 30 ) { return; }
-
 		requestAnimationFrame(anim);
 
         world.render(updated)
-        
-		//scatterPlot.render();
-		//world.renderer.render(world.scene, world.camera);
-		/* if ( updated ) {
-
-        data.renderer.render( data.scene, data.camera );
-        //console.log( 'rendered' );
-
-	} */
 	}
 
 	anim();

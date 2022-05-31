@@ -1,10 +1,8 @@
 import * as THREE from "three";
 import CameraControls from "camera-controls";
 import { Plot } from "./plots/plot";
-import { CustomElement } from "./plots/utils";
 import { SelectionBox } from "three/examples/jsm/interactive/SelectionBox";
 import { SelectionHelper } from "three/examples/jsm/interactive/SelectionHelper";
-import { CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer";
 
 CameraControls.install( { THREE: THREE } );
 
@@ -17,7 +15,7 @@ export class World {
     clock : THREE.Clock
 
     scene : THREE.Scene
-    camera : THREE.OrthographicCamera
+    camera : THREE.PerspectiveCamera
     renderer : THREE.WebGLRenderer
     cameraControls : CameraControls
 
@@ -29,7 +27,7 @@ export class World {
 
     selectionBox: SelectionBox;
     selectionHelper: SelectionHelper;
-    labelRenderer: CSS2DRenderer;
+    aspect: number;
 
     constructor() {
         this.init()
@@ -67,16 +65,14 @@ export class World {
     private init = () => {
         this.width  = window.innerWidth;
         this.height = window.innerHeight;
+        this.aspect = window.innerWidth / window.innerHeight
+        
         this.clock = new THREE.Clock();
         this.scene  = new THREE.Scene();
-        this.camera = new THREE.OrthographicCamera( this.width / - 200, this.width / 200, this.height / 200, this.height / - 200, 1, 1000 );
-        this.camera.position.set( 10, 20, 600 );
+        //this.camera = new THREE.OrthographicCamera( this.width / - 200, this.width / 200, this.height / 200, this.height / - 200, 1, 1000 );
+        this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 10000);
 
-        /* this.labelRenderer = new CSS2DRenderer();
-        this.labelRenderer.setSize( window.innerWidth, window.innerHeight );
-        this.labelRenderer.domElement.style.position = 'absolute';
-        this.labelRenderer.domElement.style.top = '0px';
-        document.body.appendChild( this.labelRenderer.domElement ); */
+        this.camera.position.set( 10, 20, 600 );
 
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setPixelRatio(window.devicePixelRatio);
@@ -88,7 +84,6 @@ export class World {
         document.body.appendChild( this.renderer.domElement );
 
         
-    
         this.cameraControls = new CameraControls( this.camera, this.renderer.domElement );
 
         this.scene.background = new THREE.Color(0xf0f0f0);
@@ -101,7 +96,7 @@ export class World {
     
         this.createSettings()
 
-        this.onWindowResize()
+        window.addEventListener( 'resize', this.onWindowResize, false );
         this.onButtonPressed()
     }
 
@@ -127,15 +122,20 @@ export class World {
             }
 
             this.currentObjIndex = this.currentObjIndex % this.objects.length
-            this.objects[this.currentObjIndex].plotIsRendered = true
-            this.objects[this.currentObjIndex].plotHasFocus = true
-            this.cameraControls.fitToBox(this.objects[this.currentObjIndex].objectToFocus, true, {
-                paddingLeft: 2,
-                paddingRight: 2,
-                paddingTop: 2,
-                paddingBottom: 2
-            })
             
+            this.focusOnObject(this.objects[this.currentObjIndex])
+            
+        })
+    }
+
+    focusOnObject = (object:Plot) => {
+        object.plotIsRendered = true
+        object.plotHasFocus = true
+        this.cameraControls.fitToBox(object.objectToFocus, true, {
+            paddingLeft: 2,
+            paddingRight: 2,
+            paddingTop: 2,
+            paddingBottom: 2
         })
     }
 
@@ -172,10 +172,10 @@ export class World {
 
     private onWindowResize = () => {
 		
-        //this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.aspect = window.innerWidth / window.innerHeight;
 		this.camera.updateProjectionMatrix();
-	
-		this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.refresh()
 	}
 
 }

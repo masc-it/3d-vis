@@ -21,7 +21,7 @@ if (require("electron-squirrel-startup")) {
 	app.quit();
 }
 
-let mainWindow : BrowserWindow
+let mainWindow: BrowserWindow;
 const template: (MenuItemConstructorOptions | MenuItem)[] = [
 	{
 		label: "File",
@@ -34,19 +34,19 @@ const template: (MenuItemConstructorOptions | MenuItem)[] = [
 				label: "Import",
 				click: async () => {
 					const win = new BrowserWindow({
-            height: 500,
-            width: 800,
-            parent: mainWindow,
-            webPreferences: {
-              preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
-              nodeIntegration: true,
-              devTools: true,
-              webSecurity: true,
-            },
-          });
-          win.setMenu(null)
-          win.loadURL(MODAL_WINDOW_WEBPACK_ENTRY);
-          win.webContents.openDevTools();
+						height: 500,
+						width: 800,
+						parent: mainWindow,
+						webPreferences: {
+							preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
+							nodeIntegration: true,
+							devTools: true,
+							webSecurity: true,
+						},
+					});
+					win.setMenu(null);
+					win.loadURL(MODAL_WINDOW_WEBPACK_ENTRY);
+					win.webContents.openDevTools();
 				},
 			},
 		],
@@ -60,6 +60,7 @@ const createWindow = (): void => {
 	mainWindow = new BrowserWindow({
 		height: 1000,
 		width: 1800,
+		enableLargerThanScreen: true,
 		webPreferences: {
 			preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
 			nodeIntegration: true,
@@ -73,7 +74,7 @@ const createWindow = (): void => {
 	mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
 	// Open the DevTools.
-	mainWindow.webContents.openDevTools();
+	//mainWindow.webContents.openDevTools();
 };
 
 // This method will be called when Electron has finished

@@ -1,6 +1,7 @@
 import {
     Object3D,
 	OrthographicCamera,
+	PerspectiveCamera,
 	Scene,
 	WebGLRenderer,
 } from "three";
@@ -12,7 +13,7 @@ import { World } from "../scene";
 export abstract class Plot {
     scene: Scene;
     renderer: WebGLRenderer;
-    camera: OrthographicCamera;
+    camera: PerspectiveCamera;
     controls: CameraControls;
 
     // keeps track of plot visibility
@@ -28,7 +29,7 @@ export abstract class Plot {
     z: number
     world: World;
 
-	constructor(world: World, scene: Scene, renderer: WebGLRenderer, camera: OrthographicCamera, controls: CameraControls) {
+	constructor(world: World, scene: Scene, renderer: WebGLRenderer, camera: PerspectiveCamera, controls: CameraControls) {
 		this.world = world
         this.scene = scene
         this.renderer = renderer

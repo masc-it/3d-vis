@@ -1,10 +1,11 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import fs from 'fs'
 import { shell } from 'electron';
+import path from "path"
 
 contextBridge.exposeInMainWorld('fs', fs)
 contextBridge.exposeInMainWorld('shell', shell)
-
+contextBridge.exposeInMainWorld('path', path)
 contextBridge.exposeInMainWorld('ipcRenderer', withPrototype(ipcRenderer))
 
 function withPrototype(obj: Record<string, any>) {
