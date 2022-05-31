@@ -85,7 +85,7 @@ export class World {
 
         
         this.cameraControls = new CameraControls( this.camera, this.renderer.domElement );
-
+        this.cameraControls.mouseButtons.right = CameraControls.ACTION.NONE
         this.scene.background = new THREE.Color(0xf0f0f0);
 		const light = new THREE.AmbientLight(0xffffff, 0.5);
 		this.scene.add(light);
@@ -108,22 +108,27 @@ export class World {
         document.addEventListener("keydown", (event:any) => {
             var name = event.key;
             
-            if (this.currentObjIndex > -1){
-                this.objects[this.currentObjIndex].resetState()
-            }
-                
+            let newIndex = this.currentObjIndex
             if (name == "ArrowRight"){
-                this.currentObjIndex += 1
+                newIndex += 1
                 
             } else if (name == "ArrowLeft") {
-                this.currentObjIndex -= 1
+                newIndex -= 1
             } else {
                 return
             }
-
-            this.currentObjIndex = this.currentObjIndex % this.objects.length
             
-            this.focusOnObject(this.objects[this.currentObjIndex])
+            this.objects[this.currentObjIndex].resetState()
+            
+            if (newIndex < 0){
+                newIndex = this.objects.length - 1
+            } 
+            
+            newIndex = newIndex % this.objects.length
+            
+            this.focusOnObject(this.objects[newIndex])
+
+            this.currentObjIndex = newIndex
             
         })
     }

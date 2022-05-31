@@ -288,25 +288,6 @@ export class ScatterPlot extends Plot {
 			const element = this.dataInfo["labels"][index];
 			this.legendMap[element] = true
 		}
-		/* for (let index = 0; index < this.dataInfo["labels"].length; index++) {
-			const element = this.dataInfo["labels"][index];
-			let boxObject = new Mesh(
-				boxGeometry,
-				new MeshLambertMaterial({
-					color: element != -1 ? this.labelColors[element] : 0xcacaca,
-				})
-			);
-			boxObject.position.set(boxC.x - w/2 + 0.6, startY, this.pointsGroupCenter.z /2 + this.z/2 )
-			boxObject.name = "#legend_" + element
-			boxObject.userData = {
-				"label": element
-			}
-			this.legendMap[element] = true
-			this.legendGroup.add(boxObject)
-			
-			startY -= 0.4
-			this.scene.add(this.legendGroup)
-		} */
 
 	}
 
@@ -449,7 +430,7 @@ export class ScatterPlot extends Plot {
 	
 		if (intersects.length > 0) {
 			this.selectionMode = !this.selectionMode
-			console.log(this.selectionMode)
+			//console.log(this.selectionMode)
 			this.controls.enabled = !this.selectionMode
 
 			if (this.selectionMode){
@@ -703,21 +684,8 @@ export class ScatterPlot extends Plot {
 
 		let divWidth = 400
 		
-
 		if (this.wasOpen && this.previousObj != undefined && obj.name == this.previousObj) {
-			/* let d = document.getElementById("preview-popup");
-			if (d != undefined) {
-
-				if (window.innerWidth - (parseInt(d.style.left.split("px")[0]) + divWidth) < 0){
-					console.log("we off limits")
-					d.style.left = left - divWidth - 20 + "px";
-				} else {
-					d.style.left = left + 20 + "px";
-				}
-				
-				d.style.top = top + "px";
-			} */
-	
+			
 			return;
 		} else {
 			try {
@@ -739,7 +707,7 @@ export class ScatterPlot extends Plot {
 	
 		var div = document.createElement("div");
 		div.style.width = divWidth + "px";
-		div.style.height = "430px";
+		div.style.height = "434px";
 		div.style.background = "white";
 		div.style.color = "white";
 	
@@ -751,9 +719,10 @@ export class ScatterPlot extends Plot {
 		div.appendChild(img);
 	
 		let openBtn = document.createElement("button");
-		openBtn.textContent = "open";
+		openBtn.textContent = "Show in folder";
 		openBtn.type = "button";
-		openBtn.classList.add("preview");
+		openBtn.classList.add("preview", "btn", "btn-outline-dark", "ms-1");
+		openBtn.style.padding = "2px"
 		openBtn.onclick = (e: any) => {
 			e.preventDefault();
 			window.shell.showItemInFolder(
