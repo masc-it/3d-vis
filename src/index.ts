@@ -25,7 +25,7 @@ let mainWindow: BrowserWindow;
 const template: (MenuItemConstructorOptions | MenuItem)[] = [
 	{
 		label: "File",
-		submenu: [isMac ? { role: "close" } : { role: "quit" }],
+		submenu: [isMac ? { role: "close" } : { role: "quit" }, {role: 'toggleDevTools'}],
 	},
 	{
 		label: "Data",

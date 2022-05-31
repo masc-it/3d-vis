@@ -653,12 +653,23 @@ export class ScatterPlot extends Plot {
 	}
 	
 	buildPopup = (obj: Mesh, top: any, left: any) => {
+
+		let divWidth = 400
+		
+
 		if (this.wasOpen && this.previousObj != undefined && obj.name == this.previousObj) {
-			let d = document.getElementById("preview-popup");
+			/* let d = document.getElementById("preview-popup");
 			if (d != undefined) {
-				d.style.left = left + 20 + "px";
+
+				if (window.innerWidth - (parseInt(d.style.left.split("px")[0]) + divWidth) < 0){
+					console.log("we off limits")
+					d.style.left = left - divWidth - 20 + "px";
+				} else {
+					d.style.left = left + 20 + "px";
+				}
+				
 				d.style.top = top + "px";
-			}
+			} */
 	
 			return;
 		} else {
@@ -678,15 +689,15 @@ export class ScatterPlot extends Plot {
 		}
 	
 		var div = document.createElement("div");
-		div.style.width = "400px";
+		div.style.width = divWidth + "px";
 		div.style.height = "430px";
 		div.style.background = "white";
 		div.style.color = "white";
 	
 		let img = document.createElement("img");
 		img.src = `data:image/jpg;base64,${this.imgs[obj.name]}`;
-		img.width = 400;
-		img.height = 400;
+		img.width = divWidth;
+		img.height = divWidth;
 		img.classList.add("preview");
 		div.appendChild(img);
 	
@@ -706,8 +717,19 @@ export class ScatterPlot extends Plot {
 		div.id = "preview-popup";
 		div.classList.add("preview");
 		div.style.position = "absolute";
-		div.style.left = left + 20 + "px";
-		div.style.top = top + "px";
+
+		if ( left + divWidth >= window.innerWidth ){
+			div.style.left = (left - 20 - divWidth) + "px";
+		} else {
+			div.style.left = left + 20 + "px";
+		}
+
+		if ( top + divWidth >= window.innerHeight ){
+			div.style.top = (top - divWidth) + "px";
+		} else {
+			div.style.top = top + "px";
+		}
+
 		let m = document.getElementById("main");
 		if (m) m.appendChild(div);
 		this.wasOpen = true;
