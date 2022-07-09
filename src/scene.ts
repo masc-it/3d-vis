@@ -85,7 +85,7 @@ export class World {
 
         
         this.cameraControls = new CameraControls( this.camera, this.renderer.domElement );
-        this.cameraControls.mouseButtons.right = CameraControls.ACTION.NONE
+        //this.cameraControls.mouseButtons.right = CameraControls.ACTION.NONE
         this.scene.background = new THREE.Color(0xf0f0f0);
 		const light = new THREE.AmbientLight(0xffffff, 0.5);
 		this.scene.add(light);

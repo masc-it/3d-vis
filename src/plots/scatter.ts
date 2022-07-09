@@ -86,7 +86,14 @@ export class ScatterPlot extends Plot {
 			this.labelColors[element] = this.colors[index]
 
 		}
-		const geometry = new SphereBufferGeometry(0.04, 5, 5);
+
+		let segments = 5
+		let radius = 0.04
+		if (this.dataObj.length > 5000){
+			segments = 3
+			radius = 0.02
+		}
+		const geometry = new SphereBufferGeometry(radius, segments, segments);
 
 		//this.buildLegend();
 		for (let i = 0; i < this.dataObj.length; i++) {
@@ -135,8 +142,10 @@ export class ScatterPlot extends Plot {
 
 		let scatterWidth = v.x
 		let scatterHeight = v.y
+		let scatterZ = v.z
 
-		this.pointsGroup.translateY(-scatterHeight)
+		this.pointsGroup.translateY(-scatterHeight*0.5 )
+		this.pointsGroup.translateZ(scatterZ * 0.9)
 		this.objectToFocus = this.pointsGroup
 		this.scene.add(this.pointsGroup);
 
@@ -154,7 +163,7 @@ export class ScatterPlot extends Plot {
 		
 		boxGeometry.scale(scatterWidth*1.2, scatterHeight*1.2, 1)
 
-		this.boxObject.position.set(this.pointsGroupCenter.x, y, this.pointsGroupCenter.z /2 + z/2 )
+		this.boxObject.position.set(this.pointsGroupCenter.x, this.pointsGroupCenter.y /2 + y/2, this.pointsGroupCenter.z /2 + z/2 )
 		//boxObject.translateY(scatterHeight)
 		
 		this.plotGroup.add(this.boxObject)
@@ -292,8 +301,10 @@ export class ScatterPlot extends Plot {
 	}
 
 	private _buildCheckbox = (name: string, id: string) => {
+
 		var checkbox = document.createElement("input");
 		checkbox.type = "checkbox";
+		checkbox.className = "label-checkbox"
 		checkbox.id = id;
 		checkbox.value = name;
 
@@ -306,7 +317,6 @@ export class ScatterPlot extends Plot {
 		
 		checkbox.onchange = (e: any) => {
 			
-
 			this.legendMap[label] = !this.legendMap[label]
 
 			let objects = this.getGroupElementsByLayer(this.pointsGroup, label)
@@ -331,6 +341,7 @@ export class ScatterPlot extends Plot {
 		labelEl.appendChild(t);
 	
 		var container = document.createElement("div");
+		
 		container.appendChild(checkbox);
 		container.appendChild(labelEl);
 		return container;
@@ -342,6 +353,26 @@ export class ScatterPlot extends Plot {
 		var container = document.getElementById("legend-container");
 		container.innerHTML = ""
 		
+		// Button to quick toggle all legend checkboxes
+		let toggleAllBtn = document.createElement("button")
+		toggleAllBtn.className = "btn btn-primary"
+		toggleAllBtn.textContent = "Toggle all"
+
+		toggleAllBtn.onclick = (e) => {
+
+			let checkboxes = document.getElementsByClassName("label-checkbox")
+
+			for (let index = 0; index < checkboxes.length; index++) {
+				const element : any = checkboxes[index];
+				
+				element.onchange()
+				element.checked ^= 1
+			}
+
+		}
+		container.appendChild(toggleAllBtn)
+
+
 		for (let index = 0; index < labels.length; index++) {
 			const element = labels[index];
 	
