@@ -1,7 +1,16 @@
 # 3D-vis
 
+Interactive, high performance 3D visualization app written in plain Typescript and THREE.js. Built with Computer Vision in mind.
+
+3D-vis has been tested with up to 30k points in the scene.
+
+<img src="https://github.com/masc-it/3d-vis/raw/main/imgs/3dvis.gif" >
+
+<img src="https://github.com/masc-it/3d-vis/raw/main/imgs/img1.png" width="300px">
+
 ## Requirements
 - [Node JS](https://nodejs.org/it/download/) 16+
+
 
 ## Setup
 
