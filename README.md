@@ -4,6 +4,8 @@ Interactive, high performance 3D visualization app written in plain Typescript a
 
 3D-vis has been tested with up to 30k points in the scene.
 
+[3D-vis PowerPoint Presentation (DRIVE)](https://docs.google.com/presentation/d/1qbguZI4_A4MCA_eivn93SMH3Rqy9NJ-HEzIJ-BrCIz0/edit?usp=sharing)
+
 <img src="https://github.com/masc-it/3d-vis/raw/main/imgs/3dvis.gif" >
 
 <img src="https://github.com/masc-it/3d-vis/raw/main/imgs/img1.png" width="300px">
