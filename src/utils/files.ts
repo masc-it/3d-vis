@@ -9,5 +9,5 @@ export function readJSONFile(path: string) {
 export function getFiles(basePath:string, ext: string) {
     
     let filesInDir = window.fs.readdirSync(basePath)
-    return filesInDir.filter(file => file.endsWith(ext)).map(file => window.path.join(basePath, file))
+    return filesInDir.filter(file => file.endsWith(ext) && !file.includes(".example.") ).map(file => window.path.join(basePath, file))
 }
