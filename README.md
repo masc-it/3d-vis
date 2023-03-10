@@ -22,7 +22,7 @@ Interactive, high performance 3D visualization app written in plain Typescript a
 
 ## Data setup
 
-The *configs* folder contains all your data configuration files (JSON).
+*~/3d-vis-configs/* and *./configs* folders contain all your plots configuration (JSON).
 
 Each of them will be associated to a different plot in the 3D world.
 
@@ -33,7 +33,7 @@ A data config file contains information about your data:
 - type
     - plot type (scatter, bar, ..)
 - data_json
-    - points to your json file containing 3-dimensional features
+    - path to a json file containing 3-dimensional features
     - different schema for each plot type
 - position
     - [x,y,z] starting point camera coordinates
@@ -55,6 +55,8 @@ A data config file contains information about your data:
 
 - labels: list[any]
 - data: list[number]
+
+You can find an example in example-data.json
 
 ## Run (DEV)
 
