@@ -35,6 +35,8 @@ A data config file contains information about your data:
 - data_json
     - points to your json file containing 3-dimensional features
     - different schema for each plot type
+- position
+    - [x,y,z] starting point camera coordinates
 
 *data_json* for a *scatter plot*:
 

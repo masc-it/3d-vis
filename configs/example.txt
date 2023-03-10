@@ -2,5 +2,6 @@
     "dataset_path": "absolute path to your images folder",
     "data_json": "path to your data.json",
     "name": "Interesting title",
-    "type": "scatter"
+    "type": "scatter",
+    "position": [0,0,0]
 }
