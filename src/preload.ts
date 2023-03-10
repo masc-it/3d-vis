@@ -2,7 +2,11 @@ import { contextBridge, ipcRenderer } from 'electron'
 import fs from 'fs'
 import { shell } from 'electron';
 import path from "path"
+import os from "os"
 
+//const app = require('electron').app
+
+contextBridge.exposeInMainWorld('os', os)
 contextBridge.exposeInMainWorld('fs', fs)
 contextBridge.exposeInMainWorld('shell', shell)
 contextBridge.exposeInMainWorld('path', path)

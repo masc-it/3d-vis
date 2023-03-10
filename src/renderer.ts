@@ -40,7 +40,19 @@ import { Bar } from "./plots/bar";
 function renderWorld() {
 	let world = new scene.World();
 
-	let configs = getFiles("./configs/", ".json")
+	let configPath = window.path.resolve(window.os.homedir(), "3d-vis-configs")
+
+	let configs = []
+	try {
+		configs = getFiles(configPath, ".json")
+
+	} catch (error) {
+		configs = getFiles("./configs/", ".json")
+		configPath = "./config"
+
+	}
+	
+	console.log(`CONFIG PATH: ${configPath}`)
 
 	let x = 0
 

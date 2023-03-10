@@ -619,7 +619,7 @@ export class ScatterPlot extends Plot {
 		
 		imgNames.forEach(element => {
 			
-			let imgPath = window.path.join(this.dataConfig.datasetPath, element)
+			let imgPath = element; // window.path.join(this.dataConfig.datasetPath, element)
 			if (this.imgs[element] == undefined) {
 				let b64 = window.fs.readFileSync(
 					imgPath,
@@ -724,7 +724,7 @@ export class ScatterPlot extends Plot {
 				if (d) d.remove();
 			} catch (error) {}
 		}
-		let imgPath = window.path.join(this.dataConfig.datasetPath, obj.userData["img_name"])
+		let imgPath = obj.userData["img_name"]; // window.path.join(this.dataConfig.datasetPath, obj.userData["img_name"])
 
 		if (this.imgs[obj.name] == undefined) {
 			
