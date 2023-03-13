@@ -1,10 +1,18 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, dialog } from 'electron'
 import fs from 'fs'
 import { shell } from 'electron';
 import path from "path"
 import os from "os"
 
-//const app = require('electron').app
+contextBridge.exposeInMainWorld(
+  // Allowed 'ipcRenderer' methods
+  'bridge', {
+      // From main to render
+      sendWsPath: (message:any) => {
+          ipcRenderer.on('sendWsPath', message);
+      }
+  }
+);
 
 contextBridge.exposeInMainWorld('os', os)
 contextBridge.exposeInMainWorld('fs', fs)

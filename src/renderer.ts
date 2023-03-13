@@ -37,22 +37,32 @@ import { DataConfig } from "./utils/dataconfig";
 import { Plot } from "./plots/plot";
 import { Bar } from "./plots/bar";
 
-function renderWorld() {
+function renderWorld(ws_path: string) {
+
+	if (ws_path === "") {
+		let e = document.createElement("h1")
+		e.id = "no_ws_h1"
+		e.innerHTML = "Open a Workspace pls. Data -> Open Workspace"
+		document.body.appendChild(e)
+		return
+	}else {
+		document.getElementById("no_ws_h1").remove()
+	}
 	let world = new scene.World();
 
-	let configPath = window.path.resolve(window.os.homedir(), "3d-vis-configs")
+	//let configPath = window.path.resolve(window.os.homedir(), "3d-vis-configs")
 
-	let configs = []
-	try {
+	let configs = getFiles(ws_path, ".json")
+	/* try {
 		configs = getFiles(configPath, ".json")
 
 	} catch (error) {
 		configs = getFiles("./configs/", ".json")
 		configPath = "./config"
 
-	}
+	} */
 	
-	console.log(`CONFIG PATH: ${configPath}`)
+	console.log(`CONFIG PATH: ${ws_path}`)
 
 	let x = 0
 
@@ -114,4 +124,9 @@ function renderWorld() {
 	anim();
 }
 
-renderWorld()
+window.bridge.sendWsPath((event:any, ws_path:string) => {
+	console.log(ws_path);
+	renderWorld(ws_path)
+});
+
+renderWorld("")
