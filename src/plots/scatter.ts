@@ -713,7 +713,7 @@ export class ScatterPlot extends Plot {
 	
 	buildPopup = (obj: Mesh, top: any, left: any) => {
 
-		let divWidth = 400
+		//let divWidth = 400
 		
 		if (this.wasOpen && this.previousObj != undefined && obj.name == this.previousObj) {
 			
@@ -737,18 +737,40 @@ export class ScatterPlot extends Plot {
 		}
 	
 		var div = document.createElement("div");
-		div.style.width = divWidth + "px";
-		div.style.height = "434px";
+		//div.style.width = divWidth + "px";
+		//div.style.height = "434px";
 		div.style.background = "white";
 		div.style.color = "white";
 	
 		let img = document.createElement("img");
 		img.src = `data:image/jpg;base64,${this.imgs[obj.name]}`;
-		img.width = divWidth;
-		img.height = divWidth;
+		
+		img.onload = (e: Event) => {
+		
+			let ratio = img.naturalWidth / img.naturalHeight
+
+			//if (img.naturalWidth > img.naturalHeight) {
+				let divWidth = Math.min(600, img.naturalWidth);
+				
+				img.width = divWidth
+				//img.height = divWidth;
+				div.style.width = divWidth + "px";
+			//}
+		
+		//div.style.height = img.height + "px"
+
 		img.classList.add("preview");
-		div.appendChild(img);
-	
+		
+
+		//console.log(`${top + img.clientHeight + 30}`)
+		//console.log(`${window.innerHeight} - ${img.height}`)
+		if ( top + img.height + 30 >= window.innerHeight ){
+			div.style.top = (2) + "px";
+			//div.style.height = img.height + "px"
+			//console.log(`ehila ${ top + img.clientHeight + 30}`)
+		} else {
+			div.style.top = top + "px";
+		}
 		let openBtn = document.createElement("button");
 		openBtn.textContent = "Show in folder";
 		openBtn.type = "button";
@@ -761,6 +783,7 @@ export class ScatterPlot extends Plot {
 			);
 			return false;
 		};
+		div.appendChild(img);
 		div.appendChild(openBtn);
 	
 		div.id = "preview-popup";
@@ -773,15 +796,10 @@ export class ScatterPlot extends Plot {
 			div.style.left = left + 20 + "px";
 		}
 
-		if ( top + divWidth >= window.innerHeight ){
-			div.style.top = (top - divWidth) + "px";
-		} else {
-			div.style.top = top + "px";
-		}
-
 		let m = document.getElementById("main");
 		if (m) m.appendChild(div);
 		this.wasOpen = true;
+	}
 	}
 	
 	onPointerMove = (event: any) => {
