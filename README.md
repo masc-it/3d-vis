@@ -10,7 +10,7 @@ Interactive, high performance 3D visualization app written in plain Typescript a
 
 <img src="https://github.com/masc-it/3d-vis/raw/main/imgs/img1.png" width="300px">
 
-## Requirements
+# Requirements
 - [Node JS](https://nodejs.org/it/download/) 16+
 
 
@@ -20,26 +20,24 @@ Interactive, high performance 3D visualization app written in plain Typescript a
     cd 3d-vis/
     npm install
 
-## Data setup
+# Data setup
 
-*~/3d-vis-configs/* and *./configs* folders contain all your plots configuration (JSON).
+## Plot config
+A **plot config** file contains information about your plots and where your data is located at:
 
-Each of them will be associated to a different plot in the 3D world.
-
-A data config file contains information about your data:
-
-- dataset_path
-    - points to your images folder
 - type
     - plot type (scatter, bar, ..)
 - data_json
-    - path to a json file containing 3-dimensional features
-    - different schema for each plot type
+    - absolute path to a **data config** file
 - position
     - [x,y,z] starting point camera coordinates
 
-*data_json* for a *scatter plot*:
+You can find an example in **example.plot.json**
 
+## Data config
+A **data config** file instead, contains all your data to be rendered. This one can be located anywhere on your PC.
+
+*data_json* for a *scatter plot*:
 - labels: list[any]
     - list of unique labels
 - num_labels: int
@@ -56,7 +54,7 @@ A data config file contains information about your data:
 - labels: list[any]
 - data: list[number]
 
-You can find an example in example-data.json
+You can find an example in **example.data.json**
 
 ## Run (DEV)
 

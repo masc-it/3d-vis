@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer, dialog } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 import fs from 'fs'
 import { shell } from 'electron';
 import path from "path"

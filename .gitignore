@@ -1,5 +1,6 @@
 dist/
 data*.json
+!example.*.json
 # Logs
 logs
 *.log

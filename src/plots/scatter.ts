@@ -476,8 +476,8 @@ export class ScatterPlot extends Plot {
 
 			this.requestWorldUpdate = true
 		}
-		
 	}
+
 	private raycastPopup = () => {
 
 		if (!this.plotHasFocus) return
@@ -619,7 +619,7 @@ export class ScatterPlot extends Plot {
 		
 		imgNames.forEach(element => {
 			
-			let imgPath = element; // window.path.join(this.dataConfig.datasetPath, element)
+			let imgPath = element;
 			if (this.imgs[element] == undefined) {
 				let b64 = window.fs.readFileSync(
 					imgPath,
@@ -724,7 +724,7 @@ export class ScatterPlot extends Plot {
 				if (d) d.remove();
 			} catch (error) {}
 		}
-		let imgPath = obj.userData["img_name"]; // window.path.join(this.dataConfig.datasetPath, obj.userData["img_name"])
+		let imgPath = obj.userData["img_name"];
 
 		if (this.imgs[obj.name] == undefined) {
 			
@@ -747,7 +747,7 @@ export class ScatterPlot extends Plot {
 		
 		img.onload = (e: Event) => {
 		
-			let ratio = img.naturalWidth / img.naturalHeight
+			//let ratio = img.naturalWidth / img.naturalHeight
 
 			//if (img.naturalWidth > img.naturalHeight) {
 				let divWidth = Math.min(600, img.naturalWidth);
@@ -760,7 +760,6 @@ export class ScatterPlot extends Plot {
 		//div.style.height = img.height + "px"
 
 		img.classList.add("preview");
-		
 
 		//console.log(`${top + img.clientHeight + 30}`)
 		//console.log(`${window.innerHeight} - ${img.height}`)

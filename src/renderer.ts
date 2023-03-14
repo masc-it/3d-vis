@@ -50,17 +50,7 @@ function renderWorld(ws_path: string) {
 	}
 	let world = new scene.World();
 
-	//let configPath = window.path.resolve(window.os.homedir(), "3d-vis-configs")
-
 	let configs = getFiles(ws_path, ".json")
-	/* try {
-		configs = getFiles(configPath, ".json")
-
-	} catch (error) {
-		configs = getFiles("./configs/", ".json")
-		configPath = "./config"
-
-	} */
 	
 	console.log(`CONFIG PATH: ${ws_path}`)
 
