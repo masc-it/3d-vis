@@ -631,7 +631,7 @@ export class ScatterPlot extends Plot {
 			let img = document.createElement("img");
 			img.src = `data:image/jpg;base64,${this.imgs[element]}`;
 			img.width = 400;
-			img.height = 400;
+			//img.height = 400;
 			
 			container.appendChild(img);
 		});
