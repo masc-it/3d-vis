@@ -1,4 +1,3 @@
-import "bootstrap/dist/css/bootstrap.min.css";
 import { getFiles, readJSONFile } from "../utils/files";
 import { DataConfig } from "../utils/dataconfig";
 import {renderWorld} from "../renderer"
@@ -129,6 +128,36 @@ function runClusteringDBScan(dataJson: any, vectors: number[][], neighborhoodRad
 
 }
 
+function runClusteringOptics(dataJson: any, vectors: number[][], neighborhoodRadius: number,
+    minPointsPerCluster: number) {
+    
+    let features = dataJson["data"]
+
+    var dbscan = new OPTICS();
+
+    var clusters = dbscan.run(vectors, neighborhoodRadius, minPointsPerCluster);
+
+    let numLabels = clusters.length
+    let labels = []
+
+    console.log(clusters);
+
+    for (let i = 0; i < clusters.length; i++) {
+        labels.push(i)
+        const idxs = clusters[i];
+        
+        for (let idx = 0; idx < idxs.length; idx++) {
+            const el_idx = idxs[idx];
+            features[el_idx]["label"] = i
+        }
+    }
+
+    dataJson["labels"] = labels
+    dataJson["num_labels"] = numLabels
+
+    return dataJson
+
+}
 function runClusteringKMeans(dataJson: any, vectors: number[][], numClusters: number) {
     
     let features = dataJson["data"]
@@ -195,6 +224,11 @@ document.getElementById("btn-run").onclick = () => {
             const minPointsPerCluster = (<HTMLInputElement>document.getElementById("dbscan-minPointsPerCluster")).value
             newDataJson = runClusteringDBScan(dataJson, vectors, parseFloat(neighborhoodRadius), parseFloat(minPointsPerCluster))
             break;
+        case "optics":
+                const opticsNeighborhoodRadius = (<HTMLInputElement>document.getElementById("optics-neighborhoodRadius")).value
+                const opticsMinPointsPerCluster = (<HTMLInputElement>document.getElementById("optics-minPointsPerCluster")).value
+                newDataJson = runClusteringOptics(dataJson, vectors, parseFloat(opticsNeighborhoodRadius), parseFloat(opticsMinPointsPerCluster))
+                break;
         case "kmeans":
             const numClusters = (<HTMLInputElement>document.getElementById("kmeans-clusters")).value
             newDataJson = runClusteringKMeans(dataJson, vectors, parseInt(numClusters))
