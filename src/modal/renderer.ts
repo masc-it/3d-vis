@@ -10,6 +10,8 @@ let selectedPlot: DataConfig
 
 let plots : DataConfig[]
 
+let clusteringMethod : "dbscan" | "kmeans" | "optics"
+
 window.bridge.sendWsPath((event:any, ws_path:string) => {
 	
     wsPath = ws_path
@@ -127,6 +129,36 @@ function runClusteringDBScan(dataJson: any, vectors: number[][], neighborhoodRad
 
 }
 
+function runClusteringKMeans(dataJson: any, vectors: number[][], numClusters: number) {
+    
+    let features = dataJson["data"]
+
+    var kmeans = new KMEANS();
+
+    var clusters = kmeans.run(vectors, numClusters);
+
+    let numLabels = clusters.length
+    let labels = []
+
+    console.log(clusters);
+
+    for (let i = 0; i < clusters.length; i++) {
+        labels.push(i)
+        const idxs = clusters[i];
+        
+        for (let idx = 0; idx < idxs.length; idx++) {
+            const el_idx = idxs[idx];
+            features[el_idx]["label"] = i
+        }
+    }
+
+    dataJson["labels"] = labels
+    dataJson["num_labels"] = numLabels
+
+    return dataJson
+
+}
+
 function saveJSONToFile(jsonData:any, outFileName: string) {
     
     window.fs.writeFileSync(outFileName, JSON.stringify(jsonData, undefined, 2), 'utf8');
@@ -155,28 +187,44 @@ document.getElementById("btn-run").onclick = () => {
     let [dataJson, vectors] = loadData()
     console.log("done loading data")
     
-    // get chosen clustering method
-    const neighborhoodRadius = (<HTMLInputElement>document.getElementById("dbscan-neighborhoodRadius")).value
-    const minPointsPerCluster = (<HTMLInputElement>document.getElementById("dbscan-minPointsPerCluster")).value
+    let newDataJson 
 
-    console.log(neighborhoodRadius)
-    let newDataJson = runClusteringDBScan(dataJson, vectors, parseFloat(neighborhoodRadius), parseFloat(minPointsPerCluster))
+    switch (clusteringMethod) {
+        case "dbscan":
+            const neighborhoodRadius = (<HTMLInputElement>document.getElementById("dbscan-neighborhoodRadius")).value
+            const minPointsPerCluster = (<HTMLInputElement>document.getElementById("dbscan-minPointsPerCluster")).value
+            newDataJson = runClusteringDBScan(dataJson, vectors, parseFloat(neighborhoodRadius), parseFloat(minPointsPerCluster))
+            break;
+        case "kmeans":
+            const numClusters = (<HTMLInputElement>document.getElementById("kmeans-clusters")).value
+            newDataJson = runClusteringKMeans(dataJson, vectors, parseInt(numClusters))
+            break;
+        default:
+            break;
+    }
 
     console.log("done clustering wtf")
     saveJSONToFile(newDataJson, base_path + "/clustering_test.json")
 
     previewData(new DataConfig({
         "data_json": base_path + "/clustering_test.json",
-        "name": "TEST",
+        "name": `${clusteringMethod}`,
         "type": "scatter",
         "position": [0,0,0]
     }))
 }
-document.getElementById("select-clustering").onchange = (e) => {
-    
-    /* */
 
-    document.getElementById("dbscan-settings").style.display = "block"
+document.getElementById("select-clustering").onchange = (e: any) => {
+
+    clusteringMethod = e.target.value
+
+    let settings = document.querySelectorAll(".settings")
+    for (let i = 0; i < settings.length; i++) {
+        const panel: any = settings[i];
+        panel.style.display = "none"
+    }
+
+    document.getElementById(`${clusteringMethod}-settings`).style.display = "block"
 
     
     
