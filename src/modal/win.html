@@ -1,6 +1,26 @@
 <html>
 
-<body>
-    Hi
+<body style="padding: 12px">
+    <h2>Cluster your data</h2>
+
+    <p id="p-loading">Loading...</p>
+
+    <p id="p-ws-path"></p>
+    <select id="select-plots" name="select-plots" style="display: none;">
+        <option value="">Select One …</option>
+    </select>
+
+    <select id="select-clustering">
+        <option value="dbscan">DBSCAN</option>
+        <option value="kmeans">KMEANS</option>
+    </select>
 </body>
+
+<script>
+
+    document.getElementById("select-clustering").onclick = (e) => {
+        // run clustering and save new plot into config dir
+        //window.close()
+    }
+</script>
 </html>

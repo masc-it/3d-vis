@@ -37,8 +37,9 @@ import { DataConfig } from "./utils/dataconfig";
 import { Plot } from "./plots/plot";
 import { Bar } from "./plots/bar";
 
-function renderWorld(ws_path: string) {
 
+
+function render(ws_path: string) {
 	if (ws_path === "") {
 		let e = document.createElement("h1")
 		e.id = "no_ws_h1"
@@ -46,21 +47,35 @@ function renderWorld(ws_path: string) {
 		document.body.appendChild(e)
 		return
 	}else {
-		document.getElementById("no_ws_h1").remove()
+		try {
+			document.getElementById("no_ws_h1").remove()
+
+		} catch (error) {
+			
+		}
 	}
-	let world = new scene.World();
 
 	let configs = getFiles(ws_path, ".json")
 	
 	console.log(`CONFIG PATH: ${ws_path}`)
 
+	let config_objs = configs.map((c) => {
+		return new DataConfig(readJSONFile(c))
+	})
+
+	renderWorld(config_objs)
+
+}
+
+export function renderWorld(config_objs : DataConfig[]) {
+
+	let world = new scene.World();
+
 	let x = 0
 
-	for (let index = 0; index < configs.length; index++) {
-		const config = configs[index];
+	for (let index = 0; index < config_objs.length; index++) {
+		const dataConfig = config_objs[index];
 		
-		const dataConfig = new DataConfig(readJSONFile(config))
-
 		let plot : Plot
 
 		switch (dataConfig.type) {
@@ -87,7 +102,7 @@ function renderWorld(ws_path: string) {
 				break;
 		}
 		if (plot == undefined){
-			console.log(`Invalid config file: ${config}`)
+			console.log(`Invalid config file: ${dataConfig}`)
 			continue
 		}
 		plot.setupData(dataConfig)
@@ -114,9 +129,13 @@ function renderWorld(ws_path: string) {
 	anim();
 }
 
-window.bridge.sendWsPath((event:any, ws_path:string) => {
-	console.log(ws_path);
-	renderWorld(ws_path)
-});
+if (require.main === module) {
+    console.log('hi');
 
-renderWorld("")
+	window.bridge.sendWsPath((event:any, ws_path:string) => {
+		console.log(ws_path)
+		render(ws_path)
+	});
+	
+	render("")
+}

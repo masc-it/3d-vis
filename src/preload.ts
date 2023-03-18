@@ -9,11 +9,14 @@ contextBridge.exposeInMainWorld(
   'bridge', {
       // From main to render
       sendWsPath: (message:any) => {
+          //state.wsPath = message
           ipcRenderer.on('sendWsPath', message);
-      }
+      },
+
+      
+      
   }
 );
-
 contextBridge.exposeInMainWorld('os', os)
 contextBridge.exposeInMainWorld('fs', fs)
 contextBridge.exposeInMainWorld('shell', shell)

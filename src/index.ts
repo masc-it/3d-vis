@@ -23,6 +23,9 @@ if (require("electron-squirrel-startup")) {
 }
 
 let mainWindow: BrowserWindow;
+let clusterWindow: BrowserWindow;
+
+let wsPath: string | undefined = undefined
 const template: (MenuItemConstructorOptions | MenuItem)[] = [
 	{
 		label: "File",
@@ -37,10 +40,42 @@ const template: (MenuItemConstructorOptions | MenuItem)[] = [
 				click: async () => {
 					let dir_obj = await dialog.showOpenDialog({ properties: ['openDirectory'] })
 					if (!dir_obj.canceled) {
-						mainWindow.webContents.send('sendWsPath', dir_obj.filePaths[0])
+						wsPath = dir_obj.filePaths[0]
+						mainWindow.webContents.send('sendWsPath', wsPath)
 					}
 				},
 			},
+			{
+				label: "Cluster",
+				click: async () => {
+					
+					let dir_obj = await dialog.showOpenDialog({ properties: ['openDirectory'] })
+					if (dir_obj.canceled) {
+						return
+					}
+					
+					wsPath = dir_obj.filePaths[0]
+					clusterWindow = new BrowserWindow({
+						height: 800,
+						width: 1200,
+						parent: mainWindow,
+						webPreferences: {
+							preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
+							nodeIntegration: true,
+							devTools: true,
+							webSecurity: true,
+						},
+					});
+					clusterWindow.setMenu(null);
+					clusterWindow.loadURL(MODAL_WINDOW_WEBPACK_ENTRY);
+
+					setTimeout(()=> {
+						clusterWindow.webContents.send('sendWsPath', wsPath)
+
+					}, 1000)
+
+				},
+			}
 		],
 	},
 ];

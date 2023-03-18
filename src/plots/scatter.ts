@@ -5,27 +5,20 @@ import {
 	Color,
 	Group,
 	Mesh,
-	MeshBasicMaterial,
 	MeshLambertMaterial,
-	MeshStandardMaterial,
 	Object3D,
 	PointLight,
 	Raycaster,
 	SphereBufferGeometry,
-	SphereGeometry,
-	SpotLight,
-	SpotLightHelper,
 	Vector2,
 	Vector3,
 } from "three";
 
 
-import { SelectionBox } from "three/examples/jsm/interactive/SelectionBox.js";
-import { SelectionHelper } from "three/examples/jsm/interactive/SelectionHelper.js";
 import { CSS2DObject } from "three/examples/jsm/renderers/CSS2DRenderer";
 
 import { Plot } from "./plot";
-import { createColors, CustomElement, shuffle } from "./utils";
+import { createColors, shuffle } from "./utils";
 import { Bar } from "./bar";
 import { DataConfig } from "../utils/dataconfig";
 import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry";
@@ -211,9 +204,13 @@ export class ScatterPlot extends Plot {
 		document.addEventListener("click", this.onMouseClick);
 
 		//this.createMenu();
-
-		this.imageGridModal = new Modal(document.getElementById("pics-modal"), {});
-		this.legendModal = new Modal(document.getElementById("legend-modal"), {});
+		try {
+			this.imageGridModal = new Modal(document.getElementById("pics-modal"), {});
+			this.legendModal = new Modal(document.getElementById("legend-modal"), {});
+		} catch (error) {
+			
+		}
+		
 		/* const barData = {
 			"hist" : hist,
 			"labels": this.dataInfo["labels"],
