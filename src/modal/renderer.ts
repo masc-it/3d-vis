@@ -6,7 +6,9 @@ import {DBSCAN, KMEANS, OPTICS} from "density-clustering"
 
 let wsPath: string | undefined = undefined
 
-let selectedPlotDataPath: string | undefined
+let selectedPlot: DataConfig
+
+let plots : DataConfig[]
 
 window.bridge.sendWsPath((event:any, ws_path:string) => {
 	
@@ -17,7 +19,7 @@ window.bridge.sendWsPath((event:any, ws_path:string) => {
     document.getElementById("p-ws-path").innerHTML = ws_path
     document.getElementById("p-loading").style.display = "none"
 
-    const plots = getPlots()
+    plots = getPlots()
 
     let plotsSelect = document.getElementById("select-plots")
 
@@ -62,45 +64,16 @@ function getPlots() {
 function onPlotSelected(e: any) {
     
     let s = e.target
-    let el = s.options[s.selectedIndex]
-    //console.log(el)
     
-    selectedPlotDataPath = el.getAttribute("data-path")
-    console.log(selectedPlotDataPath)
+    selectedPlot = plots[s.selectedIndex]
+    console.log(selectedPlot.dataJson)
 
-    let [dataJson, vectors] = loadData()
-    console.log("done loading data")
-    let newDataJson = runClustering(dataJson, vectors)
-    console.log("done clustering wtf")
-    let base_path = window.path.dirname(selectedPlotDataPath)
-    saveJSONToFile(newDataJson, base_path + "/clustering_test.json")
-    console.log("done save wow")
+    previewData(selectedPlot)
 
-    let dataConfigs = [
-        new DataConfig(
-            {
-                "data_json": base_path + "/clustering_test.json",
-                "name": "TEST",
-                "type": "scatter",
-                "position": [0,0,0]
-            }
-        )
-    ]
-    try {
-        let canvas = document.querySelectorAll("canvas")
-
-        for (let i = 0; i < canvas.length; i++) {
-            const world = canvas[i];
-            world.remove()
-        }
-    } catch {
-
-    }
-    renderWorld(dataConfigs)
 }
 
 function loadData() {
-    const rawData = window.fs.readFileSync(selectedPlotDataPath, "utf-8");
+    const rawData = window.fs.readFileSync(selectedPlot.dataJson, "utf-8");
     const dataJson = JSON.parse(rawData);
 
     let vectors: number[][] = []
@@ -108,19 +81,20 @@ function loadData() {
     let features = dataJson["data"]
     for (let i = 0; i < features.length; i++) {
         const vector = features[i];
-        
         vectors.push([vector["x"], vector["y"], vector["z"]])
     }
     return [dataJson, vectors]
 }
 
-function runClustering(dataJson: any, vectors: number[][]) {
+function runClusteringDBScan(dataJson: any, vectors: number[][], neighborhoodRadius: number,
+    minPointsPerCluster: number) {
     
     let features = dataJson["data"]
 
     var dbscan = new DBSCAN();
+
     // parameters: 5 - neighborhood radius, 2 - number of points in neighborhood to form a cluster
-    var clusters = dbscan.run(vectors, 1, 5);
+    var clusters = dbscan.run(vectors, neighborhoodRadius, minPointsPerCluster); // 1 5
 
     let numLabels = clusters.length
     let labels = []
@@ -156,4 +130,54 @@ function runClustering(dataJson: any, vectors: number[][]) {
 function saveJSONToFile(jsonData:any, outFileName: string) {
     
     window.fs.writeFileSync(outFileName, JSON.stringify(jsonData, undefined, 2), 'utf8');
+}
+
+function previewData(plot: DataConfig) {
+    let dataConfigs = [
+        plot
+    ]
+    try {
+        let canvas = document.querySelectorAll("canvas")
+
+        for (let i = 0; i < canvas.length; i++) {
+            const world = canvas[i];
+            world.remove()
+        }
+    } catch {
+
+    }
+    renderWorld(dataConfigs)
+}
+
+document.getElementById("btn-run").onclick = () => {
+
+    let base_path = window.path.dirname(selectedPlot.dataJson)
+    let [dataJson, vectors] = loadData()
+    console.log("done loading data")
+    
+    // get chosen clustering method
+    const neighborhoodRadius = (<HTMLInputElement>document.getElementById("dbscan-neighborhoodRadius")).value
+    const minPointsPerCluster = (<HTMLInputElement>document.getElementById("dbscan-minPointsPerCluster")).value
+
+    console.log(neighborhoodRadius)
+    let newDataJson = runClusteringDBScan(dataJson, vectors, parseFloat(neighborhoodRadius), parseFloat(minPointsPerCluster))
+
+    console.log("done clustering wtf")
+    saveJSONToFile(newDataJson, base_path + "/clustering_test.json")
+
+    previewData(new DataConfig({
+        "data_json": base_path + "/clustering_test.json",
+        "name": "TEST",
+        "type": "scatter",
+        "position": [0,0,0]
+    }))
+}
+document.getElementById("select-clustering").onchange = (e) => {
+    
+    /* */
+
+    document.getElementById("dbscan-settings").style.display = "block"
+
+    
+    
 }
